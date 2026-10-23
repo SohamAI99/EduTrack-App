@@ -16,6 +16,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.edutrack.data.local.Subject
 import com.example.edutrack.ui.components.AppCard
+import com.example.edutrack.ui.components.EmptyState
+import com.example.edutrack.ui.components.MascotMood
 import com.example.edutrack.ui.theme.EduTrackTheme
 import java.time.LocalDate
 
@@ -51,15 +53,30 @@ fun SubjectManagerScreen(
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            items(subjects) { subject ->
-                SubjectCard(subject = subject)
+        if (subjects.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                contentAlignment = Alignment.Center
+            ) {
+                EmptyState(
+                    mood = MascotMood.SLEEPY,
+                    title = "No subjects yet",
+                    message = "Add your first subject to get started tracking your study goals."
+                )
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(subjects) { subject ->
+                    SubjectCard(subject = subject)
+                }
             }
         }
     }
@@ -69,7 +86,7 @@ fun SubjectManagerScreen(
 fun SubjectCard(subject: Subject) {
     val color = try {
         Color(android.graphics.Color.parseColor(subject.colorHex))
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         MaterialTheme.colorScheme.primary
     }
 
@@ -134,6 +151,28 @@ fun SubjectListDarkPreview() {
                 Subject(id = 3, name = "Quantum Mechanics", colorHex = "#00B894", weeklyGoalHours = 4, createdAt = LocalDate.now()),
                 Subject(id = 4, name = "Modern Literature", colorHex = "#E17055", weeklyGoalHours = 3, createdAt = LocalDate.now())
             ),
+            onBackClick = {}
+        )
+    }
+}
+
+@Preview(name = "Subject Empty Light", showBackground = true)
+@Composable
+fun SubjectEmptyLightPreview() {
+    EduTrackTheme(darkTheme = false) {
+        SubjectManagerScreen(
+            subjects = emptyList(),
+            onBackClick = {}
+        )
+    }
+}
+
+@Preview(name = "Subject Empty Dark", showBackground = true)
+@Composable
+fun SubjectEmptyDarkPreview() {
+    EduTrackTheme(darkTheme = true) {
+        SubjectManagerScreen(
+            subjects = emptyList(),
             onBackClick = {}
         )
     }
