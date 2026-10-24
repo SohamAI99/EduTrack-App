@@ -12,4 +12,8 @@ class AppContainer(context: Context) {
     val repository: Repository by lazy {
         Repository(database.subjectDao(), database.sessionDao())
     }
+
+    val userPreferencesRepository: com.example.edutrack.data.repository.UserPreferencesRepository by lazy {
+        com.example.edutrack.data.repository.UserPreferencesRepository(context)
+    }
 }

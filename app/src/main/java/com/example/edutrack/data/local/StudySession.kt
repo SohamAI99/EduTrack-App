@@ -27,5 +27,6 @@ data class StudySession(
     val durationMinutes: Int,
     val date: LocalDate,
     val notes: String = "",
+    val tag: String = "",
     val createdAt: LocalDate
 )

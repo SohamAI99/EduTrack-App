@@ -23,4 +23,10 @@ interface SessionDao {
 
     @Query("SELECT * FROM study_sessions WHERE id = :id")
     fun getById(id: Long): Flow<StudySession?>
+
+    @Query("SELECT * FROM study_sessions WHERE subjectId = :subjectId ORDER BY date DESC, id DESC")
+    fun getBySubject(subjectId: Long): Flow<List<StudySession>>
+
+    @Query("DELETE FROM study_sessions WHERE id = :id")
+    suspend fun deleteById(id: Long)
 }

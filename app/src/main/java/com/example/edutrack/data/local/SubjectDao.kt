@@ -23,4 +23,7 @@ interface SubjectDao {
 
     @Query("SELECT * FROM subjects WHERE id = :id")
     fun getById(id: Long): Flow<Subject?>
+
+    @Query("DELETE FROM subjects WHERE id = :id")
+    suspend fun deleteById(id: Long)
 }
