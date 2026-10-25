@@ -37,7 +37,9 @@ class MainActivity : ComponentActivity() {
                             onSuccess(if (isEdit) "Subject updated" else "Subject saved")
                         }
                     },
-                    onBackClick = {}
+                    onBackClick = {},
+                    onEditSubject = viewModel::editSubject,
+                    onCancelEdit = viewModel::cancelEdit
                 )
             }
         }

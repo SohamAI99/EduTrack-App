@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -49,6 +50,8 @@ fun SubjectManagerScreen(
     onSubmitForm: ((onSuccess: (String) -> Unit) -> Unit),
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
+    onEditSubject: (Subject) -> Unit = {},
+    onDeleteSubject: (Subject) -> Unit = {},
     onCancelEdit: () -> Unit = {}
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
@@ -105,7 +108,11 @@ fun SubjectManagerScreen(
                 }
             } else {
                 items(subjects) { subject ->
-                    SubjectCard(subject = subject)
+                    SubjectCard(
+                        subject = subject,
+                        onEditClick = { onEditSubject(subject) },
+                        onDeleteClick = { onDeleteSubject(subject) }
+                    )
                 }
             }
 
@@ -412,7 +419,12 @@ fun ColorCircle(
 }
 
 @Composable
-fun SubjectCard(subject: Subject) {
+fun SubjectCard(
+    subject: Subject,
+    onEditClick: () -> Unit = {},
+    onDeleteClick: () -> Unit = {},
+    modifier: Modifier = Modifier
+) {
     val color = try {
         Color(subject.colorHex.toColorInt())
     } catch (_: Exception) {
@@ -420,14 +432,14 @@ fun SubjectCard(subject: Subject) {
     }
 
     AppCard(
-        modifier = Modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth()
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Box(
                 modifier = Modifier
@@ -447,6 +459,26 @@ fun SubjectCard(subject: Subject) {
                     text = "Goal: ${subject.weeklyGoalHours} hrs per week",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            IconButton(
+                onClick = onEditClick,
+                modifier = Modifier.size(36.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Edit,
+                    contentDescription = "Edit subject",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            IconButton(
+                onClick = onDeleteClick,
+                modifier = Modifier.size(36.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Delete subject",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }

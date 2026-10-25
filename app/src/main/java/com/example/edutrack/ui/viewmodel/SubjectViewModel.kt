@@ -71,6 +71,19 @@ class SubjectViewModel(private val repository: Repository) : ViewModel() {
         _formState.value = SubjectFormState()
     }
 
+    fun editSubject(subject: Subject) {
+        _formState.value = SubjectFormState(
+            editingSubjectId = subject.id,
+            name = subject.name,
+            selectedColorHex = subject.colorHex,
+            weeklyGoalHours = subject.weeklyGoalHours
+        )
+    }
+
+    fun cancelEdit() {
+        resetForm()
+    }
+
     fun validateForm(): Boolean {
         val current = _formState.value
         val trimmedName = current.name.trim()
