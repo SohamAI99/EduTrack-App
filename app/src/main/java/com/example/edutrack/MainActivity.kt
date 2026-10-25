@@ -31,7 +31,12 @@ class MainActivity : ComponentActivity() {
                     onColorSelect = viewModel::updateColor,
                     onIncrementGoal = viewModel::incrementGoalHours,
                     onDecrementGoal = viewModel::decrementGoalHours,
-                    onSubmitForm = { viewModel.saveSubject() },
+                    onSubmitForm = { onSuccess ->
+                        val isEdit = viewModel.formState.value.editingSubjectId != null
+                        viewModel.saveSubject {
+                            onSuccess(if (isEdit) "Subject updated" else "Subject saved")
+                        }
+                    },
                     onBackClick = {}
                 )
             }
