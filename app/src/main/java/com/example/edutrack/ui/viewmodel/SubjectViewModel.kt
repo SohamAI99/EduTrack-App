@@ -71,7 +71,38 @@ class SubjectViewModel(private val repository: Repository) : ViewModel() {
         _formState.value = SubjectFormState()
     }
 
-    fun saveSubject() {
+    fun validateForm(): Boolean {
+        val current = _formState.value
+        val trimmedName = current.name.trim()
+
+        var nameErr: String? = null
+        var goalErr: String? = null
+
+        if (trimmedName.isEmpty()) {
+            nameErr = "Subject name is required"
+        } else if (trimmedName.length > 30) {
+            nameErr = "Name must be 30 characters or less"
+        }
+
+        if (current.weeklyGoalHours !in 1..168) {
+            goalErr = "Goal must be between 1 and 168 hours"
+        }
+
+        val isValid = nameErr == null && goalErr == null
+
+        _formState.update {
+            it.copy(
+                nameError = nameErr,
+                goalError = goalErr
+            )
+        }
+
+        return isValid
+    }
+
+    fun saveSubject(onSuccess: (() -> Unit)? = null) {
+        if (!validateForm()) return
+
         val current = _formState.value
         val subject = Subject(
             id = current.editingSubjectId ?: 0,
@@ -87,6 +118,7 @@ class SubjectViewModel(private val repository: Repository) : ViewModel() {
                 repository.updateSubject(subject)
             }
             resetForm()
+            onSuccess?.invoke()
         }
     }
 
