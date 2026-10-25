@@ -22,9 +22,16 @@ class MainActivity : ComponentActivity() {
                     factory = SubjectViewModel.provideFactory(appContainer.repository)
                 )
                 val subjects by viewModel.subjects.collectAsState()
+                val formState by viewModel.formState.collectAsState()
 
                 SubjectManagerScreen(
                     subjects = subjects,
+                    formState = formState,
+                    onNameChange = viewModel::updateName,
+                    onColorSelect = viewModel::updateColor,
+                    onIncrementGoal = viewModel::incrementGoalHours,
+                    onDecrementGoal = viewModel::decrementGoalHours,
+                    onSubmitForm = { viewModel.saveSubject() },
                     onBackClick = {}
                 )
             }

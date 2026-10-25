@@ -1,33 +1,52 @@
 package com.example.edutrack.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.graphics.toColorInt
 import com.example.edutrack.data.local.Subject
+import com.example.edutrack.ui.components.AppButton
 import com.example.edutrack.ui.components.AppCard
 import com.example.edutrack.ui.components.EmptyState
 import com.example.edutrack.ui.components.MascotMood
 import com.example.edutrack.ui.theme.EduTrackTheme
+import com.example.edutrack.ui.viewmodel.DEFAULT_SUBJECT_COLORS
+import com.example.edutrack.ui.viewmodel.SubjectFormState
 import java.time.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SubjectManagerScreen(
     subjects: List<Subject>,
+    formState: SubjectFormState,
+    onNameChange: (String) -> Unit,
+    onColorSelect: (String) -> Unit,
+    onIncrementGoal: () -> Unit,
+    onDecrementGoal: () -> Unit,
+    onSubmitForm: () -> Unit,
     onBackClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onCancelEdit: () -> Unit = {}
 ) {
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -54,31 +73,327 @@ fun SubjectManagerScreen(
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
-        if (subjects.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
-                contentAlignment = Alignment.Center
-            ) {
-                EmptyState(
-                    mood = MascotMood.SLEEPY,
-                    title = "No subjects yet",
-                    message = "Add your first subject to get started tracking your study goals."
-                )
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .imePadding()
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            if (subjects.isEmpty()) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        EmptyState(
+                            mood = MascotMood.SLEEPY,
+                            title = "No subjects yet",
+                            message = "Add your first subject to get started tracking your study goals."
+                        )
+                    }
+                }
+            } else {
                 items(subjects) { subject ->
                     SubjectCard(subject = subject)
                 }
             }
+
+            item {
+                SubjectForm(
+                    formState = formState,
+                    onNameChange = onNameChange,
+                    onColorSelect = onColorSelect,
+                    onIncrementGoal = onIncrementGoal,
+                    onDecrementGoal = onDecrementGoal,
+                    onSubmitForm = onSubmitForm,
+                    onCancelEdit = onCancelEdit
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun SubjectForm(
+    formState: SubjectFormState,
+    onNameChange: (String) -> Unit,
+    onColorSelect: (String) -> Unit,
+    onIncrementGoal: () -> Unit,
+    onDecrementGoal: () -> Unit,
+    onSubmitForm: () -> Unit,
+    onCancelEdit: () -> Unit = {},
+    modifier: Modifier = Modifier
+) {
+    AppCard(
+        modifier = modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    val indicatorColor = try {
+                        Color(formState.selectedColorHex.toColorInt())
+                    } catch (_: Exception) {
+                        MaterialTheme.colorScheme.secondary
+                    }
+                    Box(
+                        modifier = Modifier
+                            .size(10.dp)
+                            .background(indicatorColor, CircleShape)
+                    )
+                    Text(
+                        text = if (formState.editingSubjectId != null) "Edit subject" else "Add new subject",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+                Surface(
+                    shape = MaterialTheme.shapes.small,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
+                ) {
+                    Text(
+                        text = "CONFIGURATOR",
+                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 12.sp),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = "SUBJECT NAME",
+                style = MaterialTheme.typography.labelSmall.copy(fontSize = 12.sp),
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+            OutlinedTextField(
+                value = formState.name,
+                onValueChange = onNameChange,
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                placeholder = {
+                    Text(
+                        text = "e.g. Organic Chemistry",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                    )
+                },
+                leadingIcon = {
+                    Text(
+                        text = "📖",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                },
+                isError = formState.nameError != null,
+                shape = MaterialTheme.shapes.medium,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
+                )
+            )
+            if (formState.nameError != null) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = formState.nameError,
+                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = "PICK COLOR TAG",
+                style = MaterialTheme.typography.labelSmall.copy(fontSize = 12.sp),
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Column(
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                val row1 = DEFAULT_SUBJECT_COLORS.take(4)
+                val row2 = DEFAULT_SUBJECT_COLORS.drop(4)
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    row1.forEach { hex ->
+                        ColorCircle(
+                            colorHex = hex,
+                            isSelected = hex.equals(formState.selectedColorHex, ignoreCase = true),
+                            onClick = { onColorSelect(hex) }
+                        )
+                    }
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    row2.forEach { hex ->
+                        ColorCircle(
+                            colorHex = hex,
+                            isSelected = hex.equals(formState.selectedColorHex, ignoreCase = true),
+                            onClick = { onColorSelect(hex) }
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = "WEEKLY GOAL TARGET",
+                style = MaterialTheme.typography.labelSmall.copy(fontSize = 12.sp),
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.medium,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    FilledIconButton(
+                        onClick = onDecrementGoal,
+                        modifier = Modifier.size(40.dp),
+                        shape = CircleShape,
+                        colors = IconButtonDefaults.filledIconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f),
+                            contentColor = MaterialTheme.colorScheme.onSurface
+                        )
+                    ) {
+                        Text(
+                            text = "-",
+                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+                        )
+                    }
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text(
+                            text = "${formState.weeklyGoalHours}",
+                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = "hrs / week",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
+                    FilledIconButton(
+                        onClick = onIncrementGoal,
+                        modifier = Modifier.size(40.dp),
+                        shape = CircleShape,
+                        colors = IconButtonDefaults.filledIconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f),
+                            contentColor = MaterialTheme.colorScheme.onSurface
+                        )
+                    ) {
+                        Icon(imageVector = Icons.Default.Add, contentDescription = "Increase goal")
+                    }
+                }
+            }
+            if (formState.goalError != null) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = formState.goalError,
+                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                if (formState.editingSubjectId != null) {
+                    OutlinedButton(
+                        onClick = onCancelEdit,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(50.dp),
+                        shape = MaterialTheme.shapes.extraLarge
+                    ) {
+                        Text("Cancel", style = MaterialTheme.typography.labelLarge)
+                    }
+                }
+                AppButton(
+                    text = if (formState.editingSubjectId != null) "Save changes" else "Add subject",
+                    onClick = onSubmitForm,
+                    isAccent = true,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ColorCircle(
+    colorHex: String,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    val color = try {
+        Color(colorHex.toColorInt())
+    } catch (_: Exception) {
+        MaterialTheme.colorScheme.primary
+    }
+
+    Box(
+        modifier = Modifier
+            .size(42.dp)
+            .then(
+                if (isSelected) {
+                    Modifier.border(3.dp, MaterialTheme.colorScheme.onSurface, CircleShape)
+                } else {
+                    Modifier
+                }
+            )
+            .padding(4.dp)
+            .clip(CircleShape)
+            .background(color)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        if (isSelected) {
+            Icon(
+                imageVector = Icons.Default.Check,
+                contentDescription = "Selected",
+                tint = if (color.luminance() > 0.5f) Color.Black else Color.White,
+                modifier = Modifier.size(18.dp)
+            )
         }
     }
 }
@@ -132,10 +447,14 @@ fun SubjectListLightPreview() {
         SubjectManagerScreen(
             subjects = listOf(
                 Subject(id = 1, name = "Computer Science", colorHex = "#6C5CE7", weeklyGoalHours = 6, createdAt = LocalDate.now()),
-                Subject(id = 2, name = "Advanced Calculus", colorHex = "#00CEC9", weeklyGoalHours = 4, createdAt = LocalDate.now()),
-                Subject(id = 3, name = "Quantum Mechanics", colorHex = "#00B894", weeklyGoalHours = 4, createdAt = LocalDate.now()),
-                Subject(id = 4, name = "Modern Literature", colorHex = "#E17055", weeklyGoalHours = 3, createdAt = LocalDate.now())
+                Subject(id = 2, name = "Advanced Calculus", colorHex = "#00CEC9", weeklyGoalHours = 4, createdAt = LocalDate.now())
             ),
+            formState = SubjectFormState(),
+            onNameChange = {},
+            onColorSelect = {},
+            onIncrementGoal = {},
+            onDecrementGoal = {},
+            onSubmitForm = {},
             onBackClick = {}
         )
     }
@@ -148,32 +467,14 @@ fun SubjectListDarkPreview() {
         SubjectManagerScreen(
             subjects = listOf(
                 Subject(id = 1, name = "Computer Science", colorHex = "#6C5CE7", weeklyGoalHours = 6, createdAt = LocalDate.now()),
-                Subject(id = 2, name = "Advanced Calculus", colorHex = "#00CEC9", weeklyGoalHours = 4, createdAt = LocalDate.now()),
-                Subject(id = 3, name = "Quantum Mechanics", colorHex = "#00B894", weeklyGoalHours = 4, createdAt = LocalDate.now()),
-                Subject(id = 4, name = "Modern Literature", colorHex = "#E17055", weeklyGoalHours = 3, createdAt = LocalDate.now())
+                Subject(id = 2, name = "Advanced Calculus", colorHex = "#00CEC9", weeklyGoalHours = 4, createdAt = LocalDate.now())
             ),
-            onBackClick = {}
-        )
-    }
-}
-
-@Preview(name = "Subject Empty Light", showBackground = true)
-@Composable
-fun SubjectEmptyLightPreview() {
-    EduTrackTheme(darkTheme = false) {
-        SubjectManagerScreen(
-            subjects = emptyList(),
-            onBackClick = {}
-        )
-    }
-}
-
-@Preview(name = "Subject Empty Dark", showBackground = true)
-@Composable
-fun SubjectEmptyDarkPreview() {
-    EduTrackTheme(darkTheme = true) {
-        SubjectManagerScreen(
-            subjects = emptyList(),
+            formState = SubjectFormState(),
+            onNameChange = {},
+            onColorSelect = {},
+            onIncrementGoal = {},
+            onDecrementGoal = {},
+            onSubmitForm = {},
             onBackClick = {}
         )
     }
