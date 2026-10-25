@@ -135,6 +135,16 @@ class SubjectViewModel(private val repository: Repository) : ViewModel() {
         }
     }
 
+    fun deleteSubject(subject: Subject, onSuccess: (() -> Unit)? = null) {
+        viewModelScope.launch {
+            repository.deleteSubject(subject)
+            if (_formState.value.editingSubjectId == subject.id) {
+                resetForm()
+            }
+            onSuccess?.invoke()
+        }
+    }
+
     companion object {
         fun provideFactory(repository: Repository): ViewModelProvider.Factory =
             object : ViewModelProvider.Factory {

@@ -39,6 +39,9 @@ class MainActivity : ComponentActivity() {
                     },
                     onBackClick = {},
                     onEditSubject = viewModel::editSubject,
+                    onDeleteSubject = { subject, onSuccess ->
+                        viewModel.deleteSubject(subject, onSuccess)
+                    },
                     onCancelEdit = viewModel::cancelEdit
                 )
             }

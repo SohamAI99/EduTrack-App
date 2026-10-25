@@ -15,8 +15,11 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import kotlinx.coroutines.launch
 import androidx.compose.ui.Modifier
@@ -51,11 +54,12 @@ fun SubjectManagerScreen(
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
     onEditSubject: (Subject) -> Unit = {},
-    onDeleteSubject: (Subject) -> Unit = {},
+    onDeleteSubject: (Subject, onSuccess: () -> Unit) -> Unit = { _, _ -> },
     onCancelEdit: () -> Unit = {}
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    var subjectToDelete by remember { mutableStateOf<Subject?>(null) }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -111,7 +115,7 @@ fun SubjectManagerScreen(
                     SubjectCard(
                         subject = subject,
                         onEditClick = { onEditSubject(subject) },
-                        onDeleteClick = { onDeleteSubject(subject) }
+                        onDeleteClick = { subjectToDelete = subject }
                     )
                 }
             }
@@ -133,6 +137,49 @@ fun SubjectManagerScreen(
                     onCancelEdit = onCancelEdit
                 )
             }
+        }
+
+        subjectToDelete?.let { targetSubject ->
+            AlertDialog(
+                onDismissRequest = { subjectToDelete = null },
+                title = {
+                    Text(
+                        text = "Delete ${targetSubject.name}?",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                },
+                text = {
+                    Text(
+                        text = "All study sessions for this subject will also be deleted.",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            val target = targetSubject
+                            subjectToDelete = null
+                            onDeleteSubject(target) {
+                                scope.launch {
+                                    snackbarHostState.showSnackbar("Subject deleted")
+                                }
+                            }
+                        }
+                    ) {
+                        Text(
+                            text = "Delete",
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = { subjectToDelete = null }
+                    ) {
+                        Text(text = "Cancel")
+                    }
+                }
+            )
         }
     }
 }
@@ -522,5 +569,133 @@ fun SubjectListDarkPreview() {
             onSubmitForm = { _ -> },
             onBackClick = {}
         )
+    }
+}
+
+@Preview(name = "Subject Form Empty Light", showBackground = true)
+@Composable
+fun SubjectFormEmptyLightPreview() {
+    EduTrackTheme(darkTheme = false) {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            SubjectForm(
+                formState = SubjectFormState(),
+                onNameChange = {},
+                onColorSelect = {},
+                onIncrementGoal = {},
+                onDecrementGoal = {},
+                onSubmitForm = {},
+                modifier = Modifier.padding(16.dp)
+            )
+        }
+    }
+}
+
+@Preview(name = "Subject Form Empty Dark", showBackground = true)
+@Composable
+fun SubjectFormEmptyDarkPreview() {
+    EduTrackTheme(darkTheme = true) {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            SubjectForm(
+                formState = SubjectFormState(),
+                onNameChange = {},
+                onColorSelect = {},
+                onIncrementGoal = {},
+                onDecrementGoal = {},
+                onSubmitForm = {},
+                modifier = Modifier.padding(16.dp)
+            )
+        }
+    }
+}
+
+@Preview(name = "Subject Form Error Light", showBackground = true)
+@Composable
+fun SubjectFormErrorLightPreview() {
+    EduTrackTheme(darkTheme = false) {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            SubjectForm(
+                formState = SubjectFormState(
+                    name = "",
+                    nameError = "Subject name is required",
+                    goalError = "Goal must be between 1 and 168 hours"
+                ),
+                onNameChange = {},
+                onColorSelect = {},
+                onIncrementGoal = {},
+                onDecrementGoal = {},
+                onSubmitForm = {},
+                modifier = Modifier.padding(16.dp)
+            )
+        }
+    }
+}
+
+@Preview(name = "Subject Form Error Dark", showBackground = true)
+@Composable
+fun SubjectFormErrorDarkPreview() {
+    EduTrackTheme(darkTheme = true) {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            SubjectForm(
+                formState = SubjectFormState(
+                    name = "",
+                    nameError = "Subject name is required",
+                    goalError = "Goal must be between 1 and 168 hours"
+                ),
+                onNameChange = {},
+                onColorSelect = {},
+                onIncrementGoal = {},
+                onDecrementGoal = {},
+                onSubmitForm = {},
+                modifier = Modifier.padding(16.dp)
+            )
+        }
+    }
+}
+
+@Preview(name = "Subject Form Edit Light", showBackground = true)
+@Composable
+fun SubjectFormEditLightPreview() {
+    EduTrackTheme(darkTheme = false) {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            SubjectForm(
+                formState = SubjectFormState(
+                    editingSubjectId = 1L,
+                    name = "Computer Science",
+                    selectedColorHex = "#6C5CE7",
+                    weeklyGoalHours = 6
+                ),
+                onNameChange = {},
+                onColorSelect = {},
+                onIncrementGoal = {},
+                onDecrementGoal = {},
+                onSubmitForm = {},
+                onCancelEdit = {},
+                modifier = Modifier.padding(16.dp)
+            )
+        }
+    }
+}
+
+@Preview(name = "Subject Form Edit Dark", showBackground = true)
+@Composable
+fun SubjectFormEditDarkPreview() {
+    EduTrackTheme(darkTheme = true) {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            SubjectForm(
+                formState = SubjectFormState(
+                    editingSubjectId = 1L,
+                    name = "Computer Science",
+                    selectedColorHex = "#6C5CE7",
+                    weeklyGoalHours = 6
+                ),
+                onNameChange = {},
+                onColorSelect = {},
+                onIncrementGoal = {},
+                onDecrementGoal = {},
+                onSubmitForm = {},
+                onCancelEdit = {},
+                modifier = Modifier.padding(16.dp)
+            )
+        }
     }
 }
