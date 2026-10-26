@@ -19,6 +19,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.edutrack.navigation.Screen
 import com.example.edutrack.ui.components.AppBottomBar
 import com.example.edutrack.ui.components.MascotMood
+import com.example.edutrack.ui.screens.AddSessionScreen
 import com.example.edutrack.ui.screens.PlaceholderScreen
 import com.example.edutrack.ui.screens.SubjectManagerScreen
 import com.example.edutrack.ui.theme.EduTrackTheme

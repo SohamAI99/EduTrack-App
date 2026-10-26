@@ -1,7 +1,9 @@
 package com.example.edutrack.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -9,9 +11,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.graphics.toColorInt
 import com.example.edutrack.data.local.Subject
 import com.example.edutrack.ui.components.AppButton
 import com.example.edutrack.ui.components.AppCard
@@ -24,6 +28,8 @@ fun AddSessionScreen(
     onSaveSession: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    var selectedSubject by remember(subjects) { mutableStateOf(subjects.firstOrNull()) }
+    var expandedSubjectDropdown by remember { mutableStateOf(false) }
     var durationMinutesText by remember { mutableStateOf("45") }
     var notesText by remember { mutableStateOf("") }
 
@@ -62,6 +68,102 @@ fun AddSessionScreen(
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // Course / Subject Section
+            item {
+                AppCard(modifier = Modifier.fillMaxWidth()) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                    ) {
+                        Text(
+                            text = "COURSE / SUBJECT",
+                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 12.sp),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        ExposedDropdownMenuBox(
+                            expanded = expandedSubjectDropdown,
+                            onExpandedChange = { expandedSubjectDropdown = !expandedSubjectDropdown },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            OutlinedTextField(
+                                value = selectedSubject?.name ?: "Select a subject",
+                                onValueChange = {},
+                                readOnly = true,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled = true),
+                                leadingIcon = {
+                                    selectedSubject?.let { subject ->
+                                        val color = try {
+                                            Color(subject.colorHex.toColorInt())
+                                        } catch (_: Exception) {
+                                            MaterialTheme.colorScheme.primary
+                                        }
+                                        Box(
+                                            modifier = Modifier
+                                                .size(14.dp)
+                                                .background(color, CircleShape)
+                                        )
+                                    }
+                                },
+                                trailingIcon = {
+                                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedSubjectDropdown)
+                                },
+                                shape = MaterialTheme.shapes.medium,
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                    unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
+                                )
+                            )
+
+                            ExposedDropdownMenu(
+                                expanded = expandedSubjectDropdown,
+                                onDismissRequest = { expandedSubjectDropdown = false }
+                            ) {
+                                if (subjects.isEmpty()) {
+                                    DropdownMenuItem(
+                                        text = { Text("No subjects available", style = MaterialTheme.typography.bodyMedium) },
+                                        onClick = { expandedSubjectDropdown = false }
+                                    )
+                                } else {
+                                    subjects.forEach { subject ->
+                                        val color = try {
+                                            Color(subject.colorHex.toColorInt())
+                                        } catch (_: Exception) {
+                                            MaterialTheme.colorScheme.primary
+                                        }
+                                        DropdownMenuItem(
+                                            text = {
+                                                Row(
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                                ) {
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .size(12.dp)
+                                                            .background(color, CircleShape)
+                                                    )
+                                                    Text(
+                                                        text = subject.name,
+                                                        style = MaterialTheme.typography.bodyMedium
+                                                    )
+                                                }
+                                            },
+                                            onClick = {
+                                                selectedSubject = subject
+                                                expandedSubjectDropdown = false
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
             // Duration Section
             item {
                 AppCard(modifier = Modifier.fillMaxWidth()) {
