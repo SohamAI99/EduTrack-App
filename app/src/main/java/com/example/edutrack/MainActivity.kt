@@ -78,10 +78,14 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         composable(Screen.AddSession.route) {
-                            PlaceholderScreen(
-                                title = "Log Session",
-                                mood = MascotMood.HAPPY,
-                                message = "Log Session form is coming soon."
+                            com.example.edutrack.ui.screens.AddSessionScreen(
+                                subjects = subjects,
+                                onBackClick = {
+                                    navController.popBackStack()
+                                },
+                                onSaveSession = {
+                                    // Save does nothing yet (Day 12)
+                                }
                             )
                         }
                         composable(Screen.Subjects.route) {
