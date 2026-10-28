@@ -3,12 +3,14 @@ package com.example.edutrack.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.example.edutrack.data.local.StudySession
 import com.example.edutrack.data.local.Subject
 import com.example.edutrack.data.repository.Repository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 
 data class SessionFormState(
@@ -78,6 +80,28 @@ class SessionViewModel(private val repository: Repository) : ViewModel() {
         }
 
         return isValid
+    }
+
+    fun saveSession(onSuccess: () -> Unit) {
+        if (!validateForm()) return
+
+        val current = _formState.value
+        val subject = current.selectedSubject ?: return
+        val durationMinutes = current.durationMinutesText.toIntOrNull() ?: return
+
+        val session = StudySession(
+            subjectId = subject.id,
+            durationMinutes = durationMinutes,
+            date = current.date,
+            notes = current.notesText.trim(),
+            createdAt = LocalDate.now()
+        )
+
+        viewModelScope.launch {
+            repository.insertSession(session)
+            resetForm(defaultSubject = subject)
+            onSuccess()
+        }
     }
 
     companion object {

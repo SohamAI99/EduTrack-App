@@ -23,6 +23,7 @@ import com.example.edutrack.ui.components.AppButton
 import com.example.edutrack.ui.components.AppCard
 import com.example.edutrack.ui.theme.EduTrackTheme
 import com.example.edutrack.ui.viewmodel.SessionFormState
+import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -39,10 +40,12 @@ fun AddSessionScreen(
     onDateChange: (LocalDate) -> Unit,
     onNotesChange: (String) -> Unit,
     onBackClick: () -> Unit,
-    onSaveSession: () -> Unit = {},
+    onSaveSession: (onSuccess: () -> Unit) -> Unit = {},
     onNavigateToSubjects: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
     var expandedSubjectDropdown by remember { mutableStateOf(false) }
     var showDatePickerDialog by remember { mutableStateOf(false) }
 
@@ -56,6 +59,7 @@ fun AddSessionScreen(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
@@ -384,7 +388,13 @@ fun AddSessionScreen(
 
                     AppButton(
                         text = "Save Session",
-                        onClick = onSaveSession,
+                        onClick = {
+                            onSaveSession {
+                                scope.launch {
+                                    snackbarHostState.showSnackbar("Session saved")
+                                }
+                            }
+                        },
                         isAccent = true,
                         modifier = Modifier.weight(1f)
                     )
@@ -449,7 +459,8 @@ fun AddSessionLightPreview() {
             onDurationChange = {},
             onDateChange = {},
             onNotesChange = {},
-            onBackClick = {}
+            onBackClick = {},
+            onSaveSession = { _ -> }
         )
     }
 }
@@ -468,7 +479,8 @@ fun AddSessionDarkPreview() {
             onDurationChange = {},
             onDateChange = {},
             onNotesChange = {},
-            onBackClick = {}
+            onBackClick = {},
+            onSaveSession = { _ -> }
         )
     }
 }

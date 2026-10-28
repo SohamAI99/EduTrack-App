@@ -95,8 +95,8 @@ class MainActivity : ComponentActivity() {
                                 onBackClick = {
                                     navController.popBackStack()
                                 },
-                                onSaveSession = {
-                                    // Save handled in Commit 3
+                                onSaveSession = { onSuccess ->
+                                    sessionViewModel.saveSession(onSuccess = onSuccess)
                                 },
                                 onNavigateToSubjects = {
                                     navController.navigate(Screen.Subjects.route)
