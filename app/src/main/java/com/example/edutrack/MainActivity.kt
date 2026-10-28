@@ -23,6 +23,7 @@ import com.example.edutrack.ui.screens.AddSessionScreen
 import com.example.edutrack.ui.screens.PlaceholderScreen
 import com.example.edutrack.ui.screens.SubjectManagerScreen
 import com.example.edutrack.ui.theme.EduTrackTheme
+import com.example.edutrack.ui.viewmodel.SessionViewModel
 import com.example.edutrack.ui.viewmodel.SubjectViewModel
 
 class MainActivity : ComponentActivity() {
@@ -39,8 +40,13 @@ class MainActivity : ComponentActivity() {
                 val subjectViewModel: SubjectViewModel = viewModel(
                     factory = SubjectViewModel.provideFactory(appContainer.repository)
                 )
+                val sessionViewModel: SessionViewModel = viewModel(
+                    factory = SessionViewModel.provideFactory(appContainer.repository)
+                )
+
                 val subjects by subjectViewModel.subjects.collectAsState()
                 val formState by subjectViewModel.formState.collectAsState()
+                val sessionFormState by sessionViewModel.formState.collectAsState()
 
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
@@ -79,13 +85,21 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         composable(Screen.AddSession.route) {
-                            com.example.edutrack.ui.screens.AddSessionScreen(
+                            AddSessionScreen(
                                 subjects = subjects,
+                                formState = sessionFormState,
+                                onSubjectChange = sessionViewModel::updateSelectedSubject,
+                                onDurationChange = sessionViewModel::updateDurationText,
+                                onDateChange = sessionViewModel::updateDate,
+                                onNotesChange = sessionViewModel::updateNotesText,
                                 onBackClick = {
                                     navController.popBackStack()
                                 },
                                 onSaveSession = {
-                                    // Save does nothing yet (Day 12)
+                                    // Save handled in Commit 3
+                                },
+                                onNavigateToSubjects = {
+                                    navController.navigate(Screen.Subjects.route)
                                 }
                             )
                         }

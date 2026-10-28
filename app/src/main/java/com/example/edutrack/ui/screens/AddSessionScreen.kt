@@ -22,6 +22,7 @@ import com.example.edutrack.data.local.Subject
 import com.example.edutrack.ui.components.AppButton
 import com.example.edutrack.ui.components.AppCard
 import com.example.edutrack.ui.theme.EduTrackTheme
+import com.example.edutrack.ui.viewmodel.SessionFormState
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -32,18 +33,26 @@ import java.util.Locale
 @Composable
 fun AddSessionScreen(
     subjects: List<Subject>,
+    formState: SessionFormState,
+    onSubjectChange: (Subject) -> Unit,
+    onDurationChange: (String) -> Unit,
+    onDateChange: (LocalDate) -> Unit,
+    onNotesChange: (String) -> Unit,
     onBackClick: () -> Unit,
     onSaveSession: () -> Unit = {},
+    onNavigateToSubjects: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    var selectedSubject by remember(subjects) { mutableStateOf(subjects.firstOrNull()) }
     var expandedSubjectDropdown by remember { mutableStateOf(false) }
-    var durationMinutesText by remember { mutableStateOf("45") }
-    var selectedDate by remember { mutableStateOf(LocalDate.now()) }
     var showDatePickerDialog by remember { mutableStateOf(false) }
-    var notesText by remember { mutableStateOf("") }
 
     val quickChips = listOf(15, 30, 45, 60)
+
+    LaunchedEffect(subjects) {
+        if (formState.selectedSubject == null && subjects.isNotEmpty()) {
+            onSubjectChange(subjects.first())
+        }
+    }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -99,14 +108,14 @@ fun AddSessionScreen(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             OutlinedTextField(
-                                value = selectedSubject?.name ?: "Select a subject",
+                                value = formState.selectedSubject?.name ?: "Select a subject",
                                 onValueChange = {},
                                 readOnly = true,
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled = true),
                                 leadingIcon = {
-                                    selectedSubject?.let { subject ->
+                                    formState.selectedSubject?.let { subject ->
                                         val color = try {
                                             Color(subject.colorHex.toColorInt())
                                         } catch (_: Exception) {
@@ -122,6 +131,7 @@ fun AddSessionScreen(
                                 trailingIcon = {
                                     ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedSubjectDropdown)
                                 },
+                                isError = formState.subjectError != null,
                                 shape = MaterialTheme.shapes.medium,
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedBorderColor = MaterialTheme.colorScheme.primary,
@@ -163,13 +173,21 @@ fun AddSessionScreen(
                                                 }
                                             },
                                             onClick = {
-                                                selectedSubject = subject
+                                                onSubjectChange(subject)
                                                 expandedSubjectDropdown = false
                                             }
                                         )
                                     }
                                 }
                             }
+                        }
+                        if (formState.subjectError != null) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = formState.subjectError,
+                                style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
+                                color = MaterialTheme.colorScheme.error
+                            )
                         }
                     }
                 }
@@ -197,8 +215,8 @@ fun AddSessionScreen(
                         ) {
                             quickChips.forEach { mins ->
                                 FilterChip(
-                                    selected = durationMinutesText == mins.toString(),
-                                    onClick = { durationMinutesText = mins.toString() },
+                                    selected = formState.durationMinutesText == mins.toString(),
+                                    onClick = { onDurationChange(mins.toString()) },
                                     label = {
                                         Text(
                                             text = "$mins min",
@@ -213,15 +231,12 @@ fun AddSessionScreen(
                         Spacer(modifier = Modifier.height(12.dp))
 
                         OutlinedTextField(
-                            value = durationMinutesText,
-                            onValueChange = { input ->
-                                if (input.isEmpty() || input.all { it.isDigit() }) {
-                                    durationMinutesText = input
-                                }
-                            },
+                            value = formState.durationMinutesText,
+                            onValueChange = onDurationChange,
                             label = { Text("Duration in minutes", style = MaterialTheme.typography.bodyMedium) },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
+                            isError = formState.durationError != null,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             shape = MaterialTheme.shapes.medium,
                             colors = OutlinedTextFieldDefaults.colors(
@@ -229,6 +244,14 @@ fun AddSessionScreen(
                                 unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
                             )
                         )
+                        if (formState.durationError != null) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = formState.durationError,
+                                style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
                     }
                 }
             }
@@ -271,7 +294,7 @@ fun AddSessionScreen(
                                         modifier = Modifier.size(20.dp)
                                     )
                                     Text(
-                                        text = formatDateDisplay(selectedDate),
+                                        text = formatDateDisplay(formState.date),
                                         style = MaterialTheme.typography.titleMedium,
                                         color = MaterialTheme.colorScheme.onSurface
                                     )
@@ -288,6 +311,14 @@ fun AddSessionScreen(
                                     )
                                 }
                             }
+                        }
+                        if (formState.dateError != null) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = formState.dateError,
+                                style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
+                                color = MaterialTheme.colorScheme.error
+                            )
                         }
                     }
                 }
@@ -309,8 +340,8 @@ fun AddSessionScreen(
                         Spacer(modifier = Modifier.height(10.dp))
 
                         OutlinedTextField(
-                            value = notesText,
-                            onValueChange = { notesText = it },
+                            value = formState.notesText,
+                            onValueChange = onNotesChange,
                             placeholder = {
                                 Text(
                                     text = "Reviewed lecture slides and attempted practice problems...",
@@ -363,7 +394,7 @@ fun AddSessionScreen(
 
         if (showDatePickerDialog) {
             val datePickerState = rememberDatePickerState(
-                initialSelectedDateMillis = selectedDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                initialSelectedDateMillis = formState.date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
             )
             DatePickerDialog(
                 onDismissRequest = { showDatePickerDialog = false },
@@ -371,9 +402,10 @@ fun AddSessionScreen(
                     TextButton(
                         onClick = {
                             datePickerState.selectedDateMillis?.let { millis ->
-                                selectedDate = Instant.ofEpochMilli(millis)
+                                val selectedLocalDate = Instant.ofEpochMilli(millis)
                                     .atZone(ZoneId.systemDefault())
                                     .toLocalDate()
+                                onDateChange(selectedLocalDate)
                             }
                             showDatePickerDialog = false
                         }
@@ -412,6 +444,11 @@ fun AddSessionLightPreview() {
                 Subject(id = 1, name = "Physics", colorHex = "#A3E635", weeklyGoalHours = 4, createdAt = LocalDate.now()),
                 Subject(id = 2, name = "Mathematics", colorHex = "#6C5CE7", weeklyGoalHours = 5, createdAt = LocalDate.now())
             ),
+            formState = SessionFormState(),
+            onSubjectChange = {},
+            onDurationChange = {},
+            onDateChange = {},
+            onNotesChange = {},
             onBackClick = {}
         )
     }
@@ -426,6 +463,11 @@ fun AddSessionDarkPreview() {
                 Subject(id = 1, name = "Physics", colorHex = "#A3E635", weeklyGoalHours = 4, createdAt = LocalDate.now()),
                 Subject(id = 2, name = "Mathematics", colorHex = "#6C5CE7", weeklyGoalHours = 5, createdAt = LocalDate.now())
             ),
+            formState = SessionFormState(),
+            onSubjectChange = {},
+            onDurationChange = {},
+            onDateChange = {},
+            onNotesChange = {},
             onBackClick = {}
         )
     }
