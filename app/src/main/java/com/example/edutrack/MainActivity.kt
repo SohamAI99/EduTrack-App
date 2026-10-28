@@ -20,9 +20,11 @@ import com.example.edutrack.navigation.Screen
 import com.example.edutrack.ui.components.AppBottomBar
 import com.example.edutrack.ui.components.MascotMood
 import com.example.edutrack.ui.screens.AddSessionScreen
+import com.example.edutrack.ui.screens.HistoryScreen
 import com.example.edutrack.ui.screens.PlaceholderScreen
 import com.example.edutrack.ui.screens.SubjectManagerScreen
 import com.example.edutrack.ui.theme.EduTrackTheme
+import com.example.edutrack.ui.viewmodel.HistoryViewModel
 import com.example.edutrack.ui.viewmodel.SessionViewModel
 import com.example.edutrack.ui.viewmodel.SubjectViewModel
 
@@ -43,10 +45,14 @@ class MainActivity : ComponentActivity() {
                 val sessionViewModel: SessionViewModel = viewModel(
                     factory = SessionViewModel.provideFactory(appContainer.repository)
                 )
+                val historyViewModel: HistoryViewModel = viewModel(
+                    factory = HistoryViewModel.provideFactory(appContainer.repository)
+                )
 
                 val subjects by subjectViewModel.subjects.collectAsState()
                 val formState by subjectViewModel.formState.collectAsState()
                 val sessionFormState by sessionViewModel.formState.collectAsState()
+                val historySessions by historyViewModel.uiState.collectAsState()
 
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
@@ -78,10 +84,8 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         composable(Screen.History.route) {
-                            PlaceholderScreen(
-                                title = "History",
-                                mood = MascotMood.STUDY,
-                                message = "No study history yet. Complete a session to see it logged here!"
+                            HistoryScreen(
+                                sessions = historySessions
                             )
                         }
                         composable(Screen.AddSession.route) {
