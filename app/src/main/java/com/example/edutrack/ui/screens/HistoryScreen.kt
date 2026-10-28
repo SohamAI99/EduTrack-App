@@ -15,10 +15,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.toColorInt
 import com.example.edutrack.ui.components.AppCard
+import com.example.edutrack.ui.components.EmptyState
+import com.example.edutrack.ui.components.MascotMood
+import com.example.edutrack.ui.theme.EduTrackTheme
 import com.example.edutrack.ui.viewmodel.SessionItemUiModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -50,30 +54,45 @@ fun HistoryScreen(
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            contentPadding = PaddingValues(bottom = 16.dp)
-        ) {
-            groupedSessions.forEach { (date, daySessions) ->
-                item(key = "header_$date") {
-                    val title = formatDateHeaderTitle(date)
-                    val sessionCountText = if (daySessions.size == 1) "1 session" else "${daySessions.size} sessions"
-                    val totalTimeText = calculateDayTotalTime(daySessions)
+        if (sessions.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                contentAlignment = Alignment.Center
+            ) {
+                EmptyState(
+                    mood = MascotMood.STUDY,
+                    title = "No sessions yet",
+                    message = "Complete a study session to see your logs here."
+                )
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(bottom = 16.dp)
+            ) {
+                groupedSessions.forEach { (date, daySessions) ->
+                    item(key = "header_$date") {
+                        val title = formatDateHeaderTitle(date)
+                        val sessionCountText = if (daySessions.size == 1) "1 session" else "${daySessions.size} sessions"
+                        val totalTimeText = calculateDayTotalTime(daySessions)
 
-                    Spacer(modifier = Modifier.height(8.dp))
-                    DateHeaderRow(
-                        title = title,
-                        sessionCountText = sessionCountText,
-                        totalTimeText = totalTimeText
-                    )
-                }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        DateHeaderRow(
+                            title = title,
+                            sessionCountText = sessionCountText,
+                            totalTimeText = totalTimeText
+                        )
+                    }
 
-                items(daySessions, key = { it.id }) { session ->
-                    SessionCard(session = session)
+                    items(daySessions, key = { it.id }) { session ->
+                        SessionCard(session = session)
+                    }
                 }
             }
         }
@@ -134,6 +153,80 @@ fun calculateDayTotalTime(groupSessions: List<SessionItemUiModel>): String {
         hrs > 0 && mins > 0 -> "${hrs}h ${mins}m"
         hrs > 0 -> "${hrs}h 00m"
         else -> "${mins}m"
+    }
+}
+
+@Preview(name = "History Empty Light", showBackground = true)
+@Composable
+fun HistoryEmptyLightPreview() {
+    EduTrackTheme(darkTheme = false) {
+        HistoryScreen(sessions = emptyList())
+    }
+}
+
+@Preview(name = "History Empty Dark", showBackground = true)
+@Composable
+fun HistoryEmptyDarkPreview() {
+    EduTrackTheme(darkTheme = true) {
+        HistoryScreen(sessions = emptyList())
+    }
+}
+
+@Preview(name = "History List Light", showBackground = true)
+@Composable
+fun HistoryListLightPreview() {
+    EduTrackTheme(darkTheme = false) {
+        HistoryScreen(
+            sessions = listOf(
+                SessionItemUiModel(
+                    id = 1,
+                    subjectId = 1,
+                    subjectName = "Physics",
+                    subjectColorHex = "#A3E635",
+                    durationMinutes = 45,
+                    date = LocalDate.now(),
+                    notes = "Rotational kinematics problem set 4"
+                ),
+                SessionItemUiModel(
+                    id = 2,
+                    subjectId = 2,
+                    subjectName = "Maths",
+                    subjectColorHex = "#6C5CE7",
+                    durationMinutes = 60,
+                    date = LocalDate.now().minusDays(1),
+                    notes = "Eigenvalues and matrix diagonalization review"
+                )
+            )
+        )
+    }
+}
+
+@Preview(name = "History List Dark", showBackground = true)
+@Composable
+fun HistoryListDarkPreview() {
+    EduTrackTheme(darkTheme = true) {
+        HistoryScreen(
+            sessions = listOf(
+                SessionItemUiModel(
+                    id = 1,
+                    subjectId = 1,
+                    subjectName = "Physics",
+                    subjectColorHex = "#A3E635",
+                    durationMinutes = 45,
+                    date = LocalDate.now(),
+                    notes = "Rotational kinematics problem set 4"
+                ),
+                SessionItemUiModel(
+                    id = 2,
+                    subjectId = 2,
+                    subjectName = "Maths",
+                    subjectColorHex = "#6C5CE7",
+                    durationMinutes = 60,
+                    date = LocalDate.now().minusDays(1),
+                    notes = "Eigenvalues and matrix diagonalization review"
+                )
+            )
+        )
     }
 }
 
