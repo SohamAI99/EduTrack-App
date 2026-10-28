@@ -48,6 +48,38 @@ class SessionViewModel(private val repository: Repository) : ViewModel() {
         _formState.value = SessionFormState(selectedSubject = defaultSubject)
     }
 
+    fun validateForm(): Boolean {
+        val current = _formState.value
+        var subjectErr: String? = null
+        var durationErr: String? = null
+        var dateErr: String? = null
+
+        if (current.selectedSubject == null) {
+            subjectErr = "A subject must be selected"
+        }
+
+        val durationInt = current.durationMinutesText.toIntOrNull()
+        if (durationInt == null || durationInt !in 1..720) {
+            durationErr = "Duration must be between 1 and 720 minutes"
+        }
+
+        if (current.date.isAfter(LocalDate.now())) {
+            dateErr = "Date cannot be in the future"
+        }
+
+        val isValid = subjectErr == null && durationErr == null && dateErr == null
+
+        _formState.update {
+            it.copy(
+                subjectError = subjectErr,
+                durationError = durationErr,
+                dateError = dateErr
+            )
+        }
+
+        return isValid
+    }
+
     companion object {
         fun provideFactory(repository: Repository): ViewModelProvider.Factory =
             object : ViewModelProvider.Factory {
