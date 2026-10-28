@@ -83,14 +83,61 @@ fun AddSessionScreen(
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .imePadding()
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
+        if (subjects.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                AppCard(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Text(
+                            text = "Add a subject first",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = "You need to add at least one subject before logging a study session.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        AppButton(
+                            text = "Go to Subjects",
+                            onClick = onNavigateToSubjects,
+                            isAccent = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        OutlinedButton(
+                            onClick = onBackClick,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp),
+                            shape = MaterialTheme.shapes.extraLarge
+                        ) {
+                            Text("Cancel", style = MaterialTheme.typography.labelLarge)
+                        }
+                    }
+                }
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .imePadding()
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
             // Course / Subject Section
             item {
                 AppCard(modifier = Modifier.fillMaxWidth()) {
@@ -401,6 +448,7 @@ fun AddSessionScreen(
                 }
             }
         }
+    }
 
         if (showDatePickerDialog) {
             val datePickerState = rememberDatePickerState(
@@ -474,6 +522,40 @@ fun AddSessionDarkPreview() {
                 Subject(id = 1, name = "Physics", colorHex = "#A3E635", weeklyGoalHours = 4, createdAt = LocalDate.now()),
                 Subject(id = 2, name = "Mathematics", colorHex = "#6C5CE7", weeklyGoalHours = 5, createdAt = LocalDate.now())
             ),
+            formState = SessionFormState(),
+            onSubjectChange = {},
+            onDurationChange = {},
+            onDateChange = {},
+            onNotesChange = {},
+            onBackClick = {},
+            onSaveSession = { _ -> }
+        )
+    }
+}
+
+@Preview(name = "Add Session No Subjects Light", showBackground = true)
+@Composable
+fun AddSessionNoSubjectsLightPreview() {
+    EduTrackTheme(darkTheme = false) {
+        AddSessionScreen(
+            subjects = emptyList(),
+            formState = SessionFormState(),
+            onSubjectChange = {},
+            onDurationChange = {},
+            onDateChange = {},
+            onNotesChange = {},
+            onBackClick = {},
+            onSaveSession = { _ -> }
+        )
+    }
+}
+
+@Preview(name = "Add Session No Subjects Dark", showBackground = true)
+@Composable
+fun AddSessionNoSubjectsDarkPreview() {
+    EduTrackTheme(darkTheme = true) {
+        AddSessionScreen(
+            subjects = emptyList(),
             formState = SessionFormState(),
             onSubjectChange = {},
             onDurationChange = {},
