@@ -32,6 +32,7 @@ import java.util.Locale
 @Composable
 fun HistoryScreen(
     sessions: List<SessionItemUiModel>,
+    onSessionClick: (Long) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val groupedSessions = remember(sessions) {
@@ -91,7 +92,10 @@ fun HistoryScreen(
                     }
 
                     items(daySessions, key = { it.id }) { session ->
-                        SessionCard(session = session)
+                        SessionCard(
+                            session = session,
+                            onClick = { onSessionClick(session.id) }
+                        )
                     }
                 }
             }
@@ -233,6 +237,7 @@ fun HistoryListDarkPreview() {
 @Composable
 fun SessionCard(
     session: SessionItemUiModel,
+    onClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val subjectColor = try {
@@ -242,6 +247,7 @@ fun SessionCard(
     }
 
     AppCard(
+        onClick = onClick,
         modifier = modifier.fillMaxWidth()
     ) {
         Column(

@@ -43,7 +43,7 @@ fun AppBottomBar(
     onNavigateToRoute: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    if (currentRoute == Screen.AddSession.route) {
+    if (currentRoute == Screen.AddSession.route || currentRoute?.startsWith("session_detail") == true) {
         return
     }
 
