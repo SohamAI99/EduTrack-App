@@ -115,7 +115,9 @@ class MainActivity : ComponentActivity() {
                                     // Handled in Day 15 (Commit 4)
                                 },
                                 onDeleteClick = {
-                                    // Handled in Commit 3
+                                    detailViewModel.deleteSession {
+                                        navController.popBackStack()
+                                    }
                                 }
                             )
                         }
