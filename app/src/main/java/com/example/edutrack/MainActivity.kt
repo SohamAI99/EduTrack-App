@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -112,7 +113,7 @@ class MainActivity : ComponentActivity() {
                                     navController.popBackStack()
                                 },
                                 onEditClick = {
-                                    // Handled in Day 15 (Commit 4)
+                                    navController.navigate(Screen.AddSession.createRoute(sessionId))
                                 },
                                 onDeleteClick = {
                                     detailViewModel.deleteSession {
@@ -121,7 +122,15 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
                         }
-                        composable(Screen.AddSession.route) {
+                        composable(
+                            route = Screen.AddSession.route,
+                            arguments = listOf(navArgument("sessionId") { type = NavType.LongType; defaultValue = -1L })
+                        ) { backStackEntry ->
+                            val sessionId = backStackEntry.arguments?.getLong("sessionId") ?: -1L
+                            LaunchedEffect(sessionId) {
+                                sessionViewModel.loadSessionForEditing(sessionId)
+                            }
+
                             AddSessionScreen(
                                 subjects = subjects,
                                 formState = sessionFormState,
@@ -133,7 +142,12 @@ class MainActivity : ComponentActivity() {
                                     navController.popBackStack()
                                 },
                                 onSaveSession = { onSuccess ->
-                                    sessionViewModel.saveSession(onSuccess = onSuccess)
+                                    sessionViewModel.saveSession {
+                                        onSuccess()
+                                        if (sessionId != -1L) {
+                                            navController.popBackStack()
+                                        }
+                                    }
                                 },
                                 onNavigateToSubjects = {
                                     navController.navigate(Screen.Subjects.route)

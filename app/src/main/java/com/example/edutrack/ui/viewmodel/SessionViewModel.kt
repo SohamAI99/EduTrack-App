@@ -9,11 +9,14 @@ import com.example.edutrack.data.repository.Repository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
 data class SessionFormState(
+    val editingSessionId: Long? = null,
+    val editingCreatedAt: LocalDate? = null,
     val selectedSubject: Subject? = null,
     val durationMinutesText: String = "45",
     val date: LocalDate = LocalDate.now(),
@@ -48,6 +51,27 @@ class SessionViewModel(private val repository: Repository) : ViewModel() {
 
     fun resetForm(defaultSubject: Subject? = null) {
         _formState.value = SessionFormState(selectedSubject = defaultSubject)
+    }
+
+    fun loadSessionForEditing(sessionId: Long) {
+        if (sessionId == -1L) {
+            resetForm()
+            return
+        }
+        viewModelScope.launch {
+            val session = repository.getSessionById(sessionId).firstOrNull() ?: return@launch
+            val subjects = repository.getAllSubjects().firstOrNull() ?: emptyList()
+            val subject = subjects.find { it.id == session.subjectId }
+
+            _formState.value = SessionFormState(
+                editingSessionId = session.id,
+                editingCreatedAt = session.createdAt,
+                selectedSubject = subject,
+                durationMinutesText = session.durationMinutes.toString(),
+                date = session.date,
+                notesText = session.notes
+            )
+        }
     }
 
     fun validateForm(): Boolean {
@@ -90,15 +114,20 @@ class SessionViewModel(private val repository: Repository) : ViewModel() {
         val durationMinutes = current.durationMinutesText.toIntOrNull() ?: return
 
         val session = StudySession(
+            id = current.editingSessionId ?: 0L,
             subjectId = subject.id,
             durationMinutes = durationMinutes,
             date = current.date,
             notes = current.notesText.trim(),
-            createdAt = LocalDate.now()
+            createdAt = current.editingCreatedAt ?: LocalDate.now()
         )
 
         viewModelScope.launch {
-            repository.insertSession(session)
+            if (current.editingSessionId == null) {
+                repository.insertSession(session)
+            } else {
+                repository.updateSession(session)
+            }
             resetForm(defaultSubject = subject)
             onSuccess()
         }

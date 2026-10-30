@@ -64,7 +64,7 @@ fun AddSessionScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Log Session",
+                        text = if (formState.editingSessionId != null) "Edit Session" else "Log Session",
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.onBackground
                     )
@@ -434,11 +434,13 @@ fun AddSessionScreen(
                     }
 
                     AppButton(
-                        text = "Save Session",
+                        text = if (formState.editingSessionId != null) "Save changes" else "Save Session",
                         onClick = {
                             onSaveSession {
                                 scope.launch {
-                                    snackbarHostState.showSnackbar("Session saved")
+                                    snackbarHostState.showSnackbar(
+                                        if (formState.editingSessionId != null) "Session updated" else "Session saved"
+                                    )
                                 }
                             }
                         },
