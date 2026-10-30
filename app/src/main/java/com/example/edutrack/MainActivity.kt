@@ -24,11 +24,13 @@ import com.example.edutrack.ui.components.AppBottomBar
 import com.example.edutrack.ui.components.MascotMood
 import com.example.edutrack.ui.screens.AddSessionScreen
 import com.example.edutrack.ui.screens.HistoryScreen
+import com.example.edutrack.ui.screens.HomeScreen
 import com.example.edutrack.ui.screens.PlaceholderScreen
 import com.example.edutrack.ui.screens.SessionDetailScreen
 import com.example.edutrack.ui.screens.SubjectManagerScreen
 import com.example.edutrack.ui.theme.EduTrackTheme
 import com.example.edutrack.ui.viewmodel.HistoryViewModel
+import com.example.edutrack.ui.viewmodel.HomeViewModel
 import com.example.edutrack.ui.viewmodel.SessionDetailViewModel
 import com.example.edutrack.ui.viewmodel.SessionViewModel
 import com.example.edutrack.ui.viewmodel.SubjectViewModel
@@ -53,11 +55,15 @@ class MainActivity : ComponentActivity() {
                 val historyViewModel: HistoryViewModel = viewModel(
                     factory = HistoryViewModel.provideFactory(appContainer.repository)
                 )
+                val homeViewModel: HomeViewModel = viewModel(
+                    factory = HomeViewModel.provideFactory(appContainer.repository)
+                )
 
                 val subjects by subjectViewModel.subjects.collectAsState()
                 val formState by subjectViewModel.formState.collectAsState()
                 val sessionFormState by sessionViewModel.formState.collectAsState()
                 val historyUiState by historyViewModel.uiState.collectAsState()
+                val homeUiState by homeViewModel.uiState.collectAsState()
 
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
@@ -82,10 +88,14 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.padding(innerPadding)
                     ) {
                         composable(Screen.Home.route) {
-                            PlaceholderScreen(
-                                title = "Home",
-                                mood = MascotMood.HAPPY,
-                                message = "Welcome to EduTrack! Your study dashboard is coming soon."
+                            HomeScreen(
+                                uiState = homeUiState,
+                                onNavigateToSubjects = {
+                                    navController.navigate(Screen.Subjects.route)
+                                },
+                                onSessionClick = { sessionId ->
+                                    navController.navigate(Screen.SessionDetail.createRoute(sessionId))
+                                }
                             )
                         }
                         composable(Screen.History.route) {
