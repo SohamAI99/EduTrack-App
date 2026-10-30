@@ -3,6 +3,7 @@ package com.example.edutrack.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -19,6 +20,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.toColorInt
+import com.example.edutrack.data.local.Subject
 import com.example.edutrack.ui.components.AppCard
 import com.example.edutrack.ui.components.EmptyState
 import com.example.edutrack.ui.components.MascotMood
@@ -32,6 +34,9 @@ import java.util.Locale
 @Composable
 fun HistoryScreen(
     sessions: List<SessionItemUiModel>,
+    subjects: List<Subject> = emptyList(),
+    selectedSubjectId: Long? = null,
+    onSubjectSelect: (Long?) -> Unit = {},
     onSessionClick: (Long) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
@@ -55,50 +60,126 @@ fun HistoryScreen(
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
-        if (sessions.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
-                contentAlignment = Alignment.Center
-            ) {
-                EmptyState(
-                    mood = MascotMood.STUDY,
-                    title = "No sessions yet",
-                    message = "Complete a study session to see your logs here."
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
+            if (subjects.isNotEmpty()) {
+                SubjectFilterRow(
+                    subjects = subjects,
+                    selectedSubjectId = selectedSubjectId,
+                    onSubjectSelect = onSubjectSelect
                 )
+                Spacer(modifier = Modifier.height(8.dp))
             }
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                contentPadding = PaddingValues(bottom = 16.dp)
-            ) {
-                groupedSessions.forEach { (date, daySessions) ->
-                    item(key = "header_$date") {
-                        val title = formatDateHeaderTitle(date)
-                        val sessionCountText = if (daySessions.size == 1) "1 session" else "${daySessions.size} sessions"
-                        val totalTimeText = calculateDayTotalTime(daySessions)
 
-                        Spacer(modifier = Modifier.height(8.dp))
-                        DateHeaderRow(
-                            title = title,
-                            sessionCountText = sessionCountText,
-                            totalTimeText = totalTimeText
-                        )
-                    }
+            if (sessions.isEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    EmptyState(
+                        mood = MascotMood.STUDY,
+                        title = "No sessions yet",
+                        message = "Complete a study session to see your logs here."
+                    )
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    contentPadding = PaddingValues(bottom = 16.dp)
+                ) {
+                    groupedSessions.forEach { (date, daySessions) ->
+                        item(key = "header_$date") {
+                            val title = formatDateHeaderTitle(date)
+                            val sessionCountText = if (daySessions.size == 1) "1 session" else "${daySessions.size} sessions"
+                            val totalTimeText = calculateDayTotalTime(daySessions)
 
-                    items(daySessions, key = { it.id }) { session ->
-                        SessionCard(
-                            session = session,
-                            onClick = { onSessionClick(session.id) }
-                        )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            DateHeaderRow(
+                                title = title,
+                                sessionCountText = sessionCountText,
+                                totalTimeText = totalTimeText
+                            )
+                        }
+
+                        items(daySessions, key = { it.id }) { session ->
+                            SessionCard(
+                                session = session,
+                                onClick = { onSessionClick(session.id) }
+                            )
+                        }
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun SubjectFilterRow(
+    subjects: List<Subject>,
+    selectedSubjectId: Long?,
+    onSubjectSelect: (Long?) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    LazyRow(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        contentPadding = PaddingValues(horizontal = 16.dp)
+    ) {
+        item {
+            FilterChip(
+                selected = selectedSubjectId == null,
+                onClick = { onSubjectSelect(null) },
+                label = {
+                    Text(
+                        text = "All",
+                        style = MaterialTheme.typography.labelMedium.copy(fontSize = 12.sp)
+                    )
+                },
+                shape = MaterialTheme.shapes.extraLarge,
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = MaterialTheme.colorScheme.primary,
+                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                )
+            )
+        }
+
+        items(subjects, key = { it.id }) { subject ->
+            val color = try {
+                Color(subject.colorHex.toColorInt())
+            } catch (_: Exception) {
+                MaterialTheme.colorScheme.primary
+            }
+            val isSelected = selectedSubjectId == subject.id
+
+            FilterChip(
+                selected = isSelected,
+                onClick = { onSubjectSelect(if (isSelected) null else subject.id) },
+                leadingIcon = {
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .background(color, CircleShape)
+                    )
+                },
+                label = {
+                    Text(
+                        text = subject.name,
+                        style = MaterialTheme.typography.labelMedium.copy(fontSize = 12.sp)
+                    )
+                },
+                shape = MaterialTheme.shapes.extraLarge,
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = MaterialTheme.colorScheme.primary,
+                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                )
+            )
         }
     }
 }
