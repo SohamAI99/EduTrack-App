@@ -71,11 +71,22 @@ class StatsViewModel(private val repository: Repository) : ViewModel() {
                 else -> "0.0 hrs vs last week"
             }
 
+            val subjectHoursList = subjects.map { subject ->
+                val thisWeekMins = thisWeekSessions.filter { it.subjectId == subject.id }.sumOf { it.durationMinutes }
+                val lastWeekMins = lastWeekSessions.filter { it.subjectId == subject.id }.sumOf { it.durationMinutes }
+                SubjectHoursUiModel(
+                    subject = subject,
+                    thisWeekHours = thisWeekMins / 60.0,
+                    lastWeekHours = lastWeekMins / 60.0
+                )
+            }
+
             StatsUiState(
                 hasStats = true,
                 thisWeekTotalHours = thisWeekTotalHours,
                 lastWeekTotalHours = lastWeekTotalHours,
-                comparisonHoursText = comparisonText
+                comparisonHoursText = comparisonText,
+                subjectHours = subjectHoursList
             )
         }
     }.stateIn(
