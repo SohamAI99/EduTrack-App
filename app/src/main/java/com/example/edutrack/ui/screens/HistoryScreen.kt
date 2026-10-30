@@ -9,8 +9,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -25,8 +24,11 @@ import com.example.edutrack.ui.components.AppCard
 import com.example.edutrack.ui.components.EmptyState
 import com.example.edutrack.ui.components.MascotMood
 import com.example.edutrack.ui.theme.EduTrackTheme
+import com.example.edutrack.ui.viewmodel.DateRange
 import com.example.edutrack.ui.viewmodel.SessionItemUiModel
+import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
@@ -36,10 +38,14 @@ fun HistoryScreen(
     sessions: List<SessionItemUiModel>,
     subjects: List<Subject> = emptyList(),
     selectedSubjectId: Long? = null,
+    dateRange: DateRange? = null,
     onSubjectSelect: (Long?) -> Unit = {},
+    onDateRangeSelect: (LocalDate?, LocalDate?) -> Unit = { _, _ -> },
     onSessionClick: (Long) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    var showDateRangePicker by remember { mutableStateOf(false) }
+
     val groupedSessions = remember(sessions) {
         sessions.groupBy { it.date }
     }
@@ -71,8 +77,14 @@ fun HistoryScreen(
                     selectedSubjectId = selectedSubjectId,
                     onSubjectSelect = onSubjectSelect
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(10.dp))
             }
+
+            DateRangeFilterRow(
+                dateRange = dateRange,
+                onOpenDatePicker = { showDateRangePicker = true }
+            )
+            Spacer(modifier = Modifier.height(12.dp))
 
             if (sessions.isEmpty()) {
                 Box(
@@ -115,6 +127,111 @@ fun HistoryScreen(
                         }
                     }
                 }
+            }
+        }
+
+        if (showDateRangePicker) {
+            val dateRangePickerState = rememberDateRangePickerState(
+                initialSelectedStartDateMillis = dateRange?.startDate?.atStartOfDay(ZoneId.systemDefault())?.toInstant()?.toEpochMilli(),
+                initialSelectedEndDateMillis = dateRange?.endDate?.atStartOfDay(ZoneId.systemDefault())?.toInstant()?.toEpochMilli()
+            )
+
+            DatePickerDialog(
+                onDismissRequest = { showDateRangePicker = false },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            val startMillis = dateRangePickerState.selectedStartDateMillis
+                            val endMillis = dateRangePickerState.selectedEndDateMillis
+                            if (startMillis != null && endMillis != null) {
+                                val startDate = Instant.ofEpochMilli(startMillis).atZone(ZoneId.systemDefault()).toLocalDate()
+                                val endDate = Instant.ofEpochMilli(endMillis).atZone(ZoneId.systemDefault()).toLocalDate()
+                                onDateRangeSelect(startDate, endDate)
+                            } else {
+                                onDateRangeSelect(null, null)
+                            }
+                            showDateRangePicker = false
+                        }
+                    ) {
+                        Text("OK")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDateRangePicker = false }) {
+                        Text("Cancel")
+                    }
+                }
+            ) {
+                DateRangePicker(
+                    state = dateRangePickerState,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun DateRangeFilterRow(
+    dateRange: DateRange?,
+    onOpenDatePicker: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val dateText = if (dateRange != null) {
+        val formatter = DateTimeFormatter.ofPattern("d MMM yyyy", Locale.getDefault())
+        "${dateRange.startDate.format(formatter)} - ${dateRange.endDate.format(formatter)}"
+    } else {
+        "All time"
+    }
+
+    AppCard(
+        onClick = onOpenDatePicker,
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.DateRange,
+                    contentDescription = "Time Window",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp)
+                )
+                Column {
+                    Text(
+                        text = "TIME WINDOW",
+                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 12.sp),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = dateText,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
+
+            Surface(
+                shape = MaterialTheme.shapes.small,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
+            ) {
+                Text(
+                    text = "Select Range",
+                    style = MaterialTheme.typography.labelMedium.copy(fontSize = 12.sp),
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                )
             }
         }
     }

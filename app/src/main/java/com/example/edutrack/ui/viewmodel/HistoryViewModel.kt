@@ -22,22 +22,33 @@ data class SessionItemUiModel(
     val notes: String
 )
 
+data class DateRange(
+    val startDate: LocalDate,
+    val endDate: LocalDate
+)
+
 data class HistoryUiState(
     val hasAnySessions: Boolean = false,
     val filteredSessions: List<SessionItemUiModel> = emptyList(),
     val subjects: List<Subject> = emptyList(),
-    val selectedSubjectId: Long? = null
-)
+    val selectedSubjectId: Long? = null,
+    val dateRange: DateRange? = null
+) {
+    val isFilterActive: Boolean
+        get() = selectedSubjectId != null || dateRange != null
+}
 
 class HistoryViewModel(private val repository: Repository) : ViewModel() {
 
     private val _selectedSubjectId = MutableStateFlow<Long?>(null)
+    private val _dateRange = MutableStateFlow<DateRange?>(null)
 
     val uiState: StateFlow<HistoryUiState> = combine(
         repository.getAllSessions(),
         repository.getAllSubjects(),
-        _selectedSubjectId
-    ) { sessions, subjects, selectedSubjectId ->
+        _selectedSubjectId,
+        _dateRange
+    ) { sessions, subjects, selectedSubjectId, dateRange ->
         val validSubjectId = if (selectedSubjectId != null && subjects.none { it.id == selectedSubjectId }) {
             null
         } else {
@@ -47,7 +58,9 @@ class HistoryViewModel(private val repository: Repository) : ViewModel() {
         val subjectMap = subjects.associateBy { it.id }
 
         val filteredSessions = sessions.filter { session ->
-            validSubjectId == null || session.subjectId == validSubjectId
+            val matchesSubject = validSubjectId == null || session.subjectId == validSubjectId
+            val matchesDate = dateRange == null || (session.date >= dateRange.startDate && session.date <= dateRange.endDate)
+            matchesSubject && matchesDate
         }.map { session ->
             val subject = subjectMap[session.subjectId]
             SessionItemUiModel(
@@ -65,7 +78,8 @@ class HistoryViewModel(private val repository: Repository) : ViewModel() {
             hasAnySessions = sessions.isNotEmpty(),
             filteredSessions = filteredSessions,
             subjects = subjects,
-            selectedSubjectId = validSubjectId
+            selectedSubjectId = validSubjectId,
+            dateRange = dateRange
         )
     }.stateIn(
         scope = viewModelScope,
@@ -75,6 +89,14 @@ class HistoryViewModel(private val repository: Repository) : ViewModel() {
 
     fun selectSubjectFilter(subjectId: Long?) {
         _selectedSubjectId.value = subjectId
+    }
+
+    fun setDateRangeFilter(startDate: LocalDate?, endDate: LocalDate?) {
+        if (startDate != null && endDate != null) {
+            _dateRange.value = DateRange(startDate, endDate)
+        } else {
+            _dateRange.value = null
+        }
     }
 
     companion object {

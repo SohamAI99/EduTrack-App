@@ -93,7 +93,9 @@ class MainActivity : ComponentActivity() {
                                 sessions = historyUiState.filteredSessions,
                                 subjects = historyUiState.subjects,
                                 selectedSubjectId = historyUiState.selectedSubjectId,
+                                dateRange = historyUiState.dateRange,
                                 onSubjectSelect = historyViewModel::selectSubjectFilter,
+                                onDateRangeSelect = historyViewModel::setDateRangeFilter,
                                 onSessionClick = { sessionId ->
                                     navController.navigate(Screen.SessionDetail.createRoute(sessionId))
                                 }
