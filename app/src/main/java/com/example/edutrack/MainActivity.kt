@@ -57,7 +57,7 @@ class MainActivity : ComponentActivity() {
                 val subjects by subjectViewModel.subjects.collectAsState()
                 val formState by subjectViewModel.formState.collectAsState()
                 val sessionFormState by sessionViewModel.formState.collectAsState()
-                val historySessions by historyViewModel.uiState.collectAsState()
+                val historyUiState by historyViewModel.uiState.collectAsState()
 
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
@@ -90,7 +90,10 @@ class MainActivity : ComponentActivity() {
                         }
                         composable(Screen.History.route) {
                             HistoryScreen(
-                                sessions = historySessions,
+                                sessions = historyUiState.filteredSessions,
+                                subjects = historyUiState.subjects,
+                                selectedSubjectId = historyUiState.selectedSubjectId,
+                                onSubjectSelect = historyViewModel::selectSubjectFilter,
                                 onSessionClick = { sessionId ->
                                     navController.navigate(Screen.SessionDetail.createRoute(sessionId))
                                 }
