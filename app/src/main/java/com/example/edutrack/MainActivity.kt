@@ -91,6 +91,7 @@ class MainActivity : ComponentActivity() {
                         composable(Screen.History.route) {
                             HistoryScreen(
                                 sessions = historyUiState.filteredSessions,
+                                hasAnySessions = historyUiState.hasAnySessions,
                                 subjects = historyUiState.subjects,
                                 selectedSubjectId = historyUiState.selectedSubjectId,
                                 dateRange = historyUiState.dateRange,

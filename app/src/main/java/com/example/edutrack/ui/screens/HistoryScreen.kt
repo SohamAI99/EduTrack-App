@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.toColorInt
 import com.example.edutrack.data.local.Subject
+import com.example.edutrack.ui.components.AppButton
 import com.example.edutrack.ui.components.AppCard
 import com.example.edutrack.ui.components.EmptyState
 import com.example.edutrack.ui.components.MascotMood
@@ -36,6 +37,7 @@ import java.util.Locale
 @Composable
 fun HistoryScreen(
     sessions: List<SessionItemUiModel>,
+    hasAnySessions: Boolean = true,
     subjects: List<Subject> = emptyList(),
     selectedSubjectId: Long? = null,
     dateRange: DateRange? = null,
@@ -114,7 +116,7 @@ fun HistoryScreen(
             )
             Spacer(modifier = Modifier.height(12.dp))
 
-            if (sessions.isEmpty()) {
+            if (!hasAnySessions) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
@@ -124,6 +126,29 @@ fun HistoryScreen(
                         title = "No sessions yet",
                         message = "Complete a study session to see your logs here."
                     )
+                }
+            } else if (sessions.isEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier.padding(24.dp)
+                    ) {
+                        EmptyState(
+                            mood = MascotMood.SLEEPY,
+                            title = "No sessions match your filters",
+                            message = "Try selecting a different subject or adjusting your time window."
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        AppButton(
+                            text = "Clear Filters",
+                            onClick = onClearFilters,
+                            isAccent = true
+                        )
+                    }
                 }
             } else {
                 LazyColumn(
@@ -398,7 +423,31 @@ fun HistoryEmptyLightPreview() {
 @Composable
 fun HistoryEmptyDarkPreview() {
     EduTrackTheme(darkTheme = true) {
-        HistoryScreen(sessions = emptyList())
+        HistoryScreen(sessions = emptyList(), hasAnySessions = false)
+    }
+}
+
+@Preview(name = "History Filter Empty Light", showBackground = true)
+@Composable
+fun HistoryFilterEmptyLightPreview() {
+    EduTrackTheme(darkTheme = false) {
+        HistoryScreen(
+            sessions = emptyList(),
+            hasAnySessions = true,
+            isFilterActive = true
+        )
+    }
+}
+
+@Preview(name = "History Filter Empty Dark", showBackground = true)
+@Composable
+fun HistoryFilterEmptyDarkPreview() {
+    EduTrackTheme(darkTheme = true) {
+        HistoryScreen(
+            sessions = emptyList(),
+            hasAnySessions = true,
+            isFilterActive = true
+        )
     }
 }
 
