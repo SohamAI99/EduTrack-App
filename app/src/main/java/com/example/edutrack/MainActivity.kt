@@ -27,12 +27,14 @@ import com.example.edutrack.ui.screens.HistoryScreen
 import com.example.edutrack.ui.screens.HomeScreen
 import com.example.edutrack.ui.screens.PlaceholderScreen
 import com.example.edutrack.ui.screens.SessionDetailScreen
+import com.example.edutrack.ui.screens.StatsScreen
 import com.example.edutrack.ui.screens.SubjectManagerScreen
 import com.example.edutrack.ui.theme.EduTrackTheme
 import com.example.edutrack.ui.viewmodel.HistoryViewModel
 import com.example.edutrack.ui.viewmodel.HomeViewModel
 import com.example.edutrack.ui.viewmodel.SessionDetailViewModel
 import com.example.edutrack.ui.viewmodel.SessionViewModel
+import com.example.edutrack.ui.viewmodel.StatsViewModel
 import com.example.edutrack.ui.viewmodel.SubjectViewModel
 
 class MainActivity : ComponentActivity() {
@@ -58,12 +60,16 @@ class MainActivity : ComponentActivity() {
                 val homeViewModel: HomeViewModel = viewModel(
                     factory = HomeViewModel.provideFactory(appContainer.repository)
                 )
+                val statsViewModel: StatsViewModel = viewModel(
+                    factory = StatsViewModel.provideFactory(appContainer.repository)
+                )
 
                 val subjects by subjectViewModel.subjects.collectAsState()
                 val formState by subjectViewModel.formState.collectAsState()
                 val sessionFormState by sessionViewModel.formState.collectAsState()
                 val historyUiState by historyViewModel.uiState.collectAsState()
                 val homeUiState by homeViewModel.uiState.collectAsState()
+                val statsUiState by statsViewModel.uiState.collectAsState()
 
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
@@ -197,10 +203,8 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         composable(Screen.Stats.route) {
-                            PlaceholderScreen(
-                                title = "Stats",
-                                mood = MascotMood.STUDY,
-                                message = "Study analytics and charts will appear here soon."
+                            StatsScreen(
+                                uiState = statsUiState
                             )
                         }
                     }
