@@ -55,6 +55,7 @@ class StatsViewModel(private val repository: Repository) : ViewModel() {
             val lastWeekMonday = monday.minusDays(7)
             val lastWeekSunday = monday.minusDays(1)
 
+            // Weekly totals matching History Flow data
             val thisWeekSessions = sessions.filter { it.date >= monday && it.date <= sunday }
             val lastWeekSessions = sessions.filter { it.date >= lastWeekMonday && it.date <= lastWeekSunday }
 
