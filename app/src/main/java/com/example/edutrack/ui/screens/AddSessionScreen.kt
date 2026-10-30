@@ -436,10 +436,11 @@ fun AddSessionScreen(
                     AppButton(
                         text = if (formState.editingSessionId != null) "Save changes" else "Save Session",
                         onClick = {
+                            val isEditMode = formState.editingSessionId != null
                             onSaveSession {
                                 scope.launch {
                                     snackbarHostState.showSnackbar(
-                                        if (formState.editingSessionId != null) "Session updated" else "Session saved"
+                                        if (isEditMode) "Session updated" else "Session saved"
                                     )
                                 }
                             }
