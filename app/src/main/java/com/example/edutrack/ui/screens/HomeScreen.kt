@@ -27,6 +27,7 @@ import com.example.edutrack.ui.components.EmptyState
 import com.example.edutrack.ui.components.MascotMood
 import com.example.edutrack.ui.theme.EduTrackTheme
 import com.example.edutrack.ui.viewmodel.HomeUiState
+import com.example.edutrack.ui.viewmodel.SessionItemUiModel
 import com.example.edutrack.ui.viewmodel.SubjectProgressUiModel
 import com.example.edutrack.ui.viewmodel.formatDurationCompact
 
@@ -182,6 +183,36 @@ fun HomeScreen(
                 // Subject Progress Cards
                 items(uiState.subjects, key = { it.subject.id }) { subjectProgress ->
                     SubjectProgressCard(progress = subjectProgress)
+                }
+
+                // "Recent activity" Section Header
+                item {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Recent activity",
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                }
+
+                if (uiState.recentSessions.isEmpty()) {
+                    item {
+                        AppCard(modifier = Modifier.fillMaxWidth()) {
+                            Text(
+                                text = "No sessions yet",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(16.dp)
+                            )
+                        }
+                    }
+                } else {
+                    items(uiState.recentSessions, key = { "recent_${it.id}" }) { session ->
+                        RecentActivityCard(
+                            session = session,
+                            onClick = { onSessionClick(session.id) }
+                        )
+                    }
                 }
             }
         }
@@ -343,6 +374,62 @@ fun SubjectProgressCard(
                     color = if (progress.remainingText == "Goal reached") MaterialTheme.colorScheme.secondary else subjectColor
                 )
             }
+        }
+    }
+}
+
+@Composable
+fun RecentActivityCard(
+    session: SessionItemUiModel,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val subjectColor = try {
+        Color(session.subjectColorHex.toColorInt())
+    } catch (_: Exception) {
+        MaterialTheme.colorScheme.primary
+    }
+
+    AppCard(
+        onClick = onClick,
+        modifier = modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(10.dp)
+                        .background(subjectColor, CircleShape)
+                )
+                Column {
+                    Text(
+                        text = session.subjectName,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = formatDateHeaderTitle(session.date),
+                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            Text(
+                text = formatDurationMinutes(session.durationMinutes),
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onSurface
+            )
         }
     }
 }
