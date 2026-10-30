@@ -39,8 +39,10 @@ fun HistoryScreen(
     subjects: List<Subject> = emptyList(),
     selectedSubjectId: Long? = null,
     dateRange: DateRange? = null,
+    isFilterActive: Boolean = false,
     onSubjectSelect: (Long?) -> Unit = {},
     onDateRangeSelect: (LocalDate?, LocalDate?) -> Unit = { _, _ -> },
+    onClearFilters: () -> Unit = {},
     onSessionClick: (Long) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
@@ -71,6 +73,32 @@ fun HistoryScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 2.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "FILTERS",
+                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 12.sp),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                if (isFilterActive) {
+                    TextButton(
+                        onClick = onClearFilters,
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+                    ) {
+                        Text(
+                            text = "Clear",
+                            style = MaterialTheme.typography.labelMedium.copy(fontSize = 12.sp, fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+            }
+
             if (subjects.isNotEmpty()) {
                 SubjectFilterRow(
                     subjects = subjects,

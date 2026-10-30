@@ -99,6 +99,11 @@ class HistoryViewModel(private val repository: Repository) : ViewModel() {
         }
     }
 
+    fun clearFilters() {
+        _selectedSubjectId.value = null
+        _dateRange.value = null
+    }
+
     companion object {
         fun provideFactory(repository: Repository): ViewModelProvider.Factory =
             object : ViewModelProvider.Factory {
