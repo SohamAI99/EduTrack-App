@@ -1,14 +1,18 @@
 package com.example.edutrack.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -20,6 +24,7 @@ import com.example.edutrack.ui.components.AppCard
 import com.example.edutrack.ui.components.EmptyState
 import com.example.edutrack.ui.components.MascotMood
 import com.example.edutrack.ui.theme.EduTrackTheme
+import com.example.edutrack.ui.viewmodel.RhythmDayUiModel
 import com.example.edutrack.ui.viewmodel.StatsUiState
 import com.example.edutrack.ui.viewmodel.SubjectHoursUiModel
 import java.util.Locale
@@ -152,6 +157,13 @@ fun StatsScreen(
                     )
                 }
 
+                // Weekly Rhythm Section
+                if (uiState.rhythmDays.isNotEmpty()) {
+                    item {
+                        WeeklyRhythmCard(rhythmDays = uiState.rhythmDays)
+                    }
+                }
+
                 // Hours per subject Section
                 if (uiState.subjectHours.isNotEmpty()) {
                     item {
@@ -252,6 +264,91 @@ fun StreakCardsRow(
                         modifier = Modifier.padding(bottom = 2.dp)
                     )
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun WeeklyRhythmCard(
+    rhythmDays: List<RhythmDayUiModel>,
+    modifier: Modifier = Modifier
+) {
+    AppCard(modifier = modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Text(
+                text = "Weekly Rhythm",
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                rhythmDays.forEach { day ->
+                    RhythmDayDot(day = day)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun RhythmDayDot(
+    day: RhythmDayUiModel,
+    modifier: Modifier = Modifier
+) {
+    val alpha = if (day.isFuture) 0.35f else 1f
+
+    Column(
+        modifier = modifier.alpha(alpha),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        Text(
+            text = day.dayLabel,
+            style = MaterialTheme.typography.labelSmall.copy(
+                fontSize = 12.sp,
+                fontWeight = if (day.isToday) FontWeight.Bold else FontWeight.Normal
+            ),
+            color = if (day.isToday) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .then(
+                    if (day.isToday) {
+                        Modifier.border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
+                    } else {
+                        Modifier
+                    }
+                )
+                .padding(3.dp)
+                .clip(CircleShape)
+                .background(
+                    if (day.hasSession) {
+                        MaterialTheme.colorScheme.secondary
+                    } else {
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
+                    }
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            if (day.hasSession) {
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = "Session completed",
+                    tint = Color.Black,
+                    modifier = Modifier.size(18.dp)
+                )
             }
         }
     }

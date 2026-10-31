@@ -85,6 +85,27 @@ class StatsViewModel(private val repository: Repository) : ViewModel() {
             val sessionDates = sessions.map { it.date }.toSet()
             val streakResult = com.example.edutrack.util.StreakCalculator.calculateStreak(sessionDates, today)
 
+            val rhythmDaysList = (0..6).map { dayOffset ->
+                val date = monday.plusDays(dayOffset.toLong())
+                val label = when (date.dayOfWeek) {
+                    DayOfWeek.MONDAY -> "M"
+                    DayOfWeek.TUESDAY -> "T"
+                    DayOfWeek.WEDNESDAY -> "W"
+                    DayOfWeek.THURSDAY -> "T"
+                    DayOfWeek.FRIDAY -> "F"
+                    DayOfWeek.SATURDAY -> "S"
+                    DayOfWeek.SUNDAY -> "S"
+                }
+                RhythmDayUiModel(
+                    dayOfWeek = date.dayOfWeek,
+                    dayLabel = label,
+                    date = date,
+                    hasSession = thisWeekSessions.any { it.date == date },
+                    isToday = date == today,
+                    isFuture = date.isAfter(today)
+                )
+            }
+
             StatsUiState(
                 hasStats = true,
                 thisWeekTotalHours = thisWeekTotalHours,
@@ -92,7 +113,8 @@ class StatsViewModel(private val repository: Repository) : ViewModel() {
                 comparisonHoursText = comparisonText,
                 subjectHours = subjectHoursList,
                 currentStreak = streakResult.currentStreak,
-                bestStreak = streakResult.bestStreak
+                bestStreak = streakResult.bestStreak,
+                rhythmDays = rhythmDaysList
             )
         }
     }.stateIn(
