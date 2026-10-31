@@ -87,7 +87,7 @@ fun AppBottomBar(
                 Icon(
                     imageVector = Icons.Default.Add,
                     contentDescription = "Add Session",
-                    tint = Color.Black,
+                    tint = MaterialTheme.colorScheme.onSecondary,
                     modifier = Modifier.size(28.dp)
                 )
             }

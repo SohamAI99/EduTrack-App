@@ -346,7 +346,7 @@ fun RhythmDayDot(
                 Icon(
                     imageVector = Icons.Default.Check,
                     contentDescription = "Session completed",
-                    tint = Color.Black,
+                    tint = MaterialTheme.colorScheme.onSecondary,
                     modifier = Modifier.size(18.dp)
                 )
             }
