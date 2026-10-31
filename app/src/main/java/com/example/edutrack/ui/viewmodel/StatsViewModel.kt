@@ -82,12 +82,17 @@ class StatsViewModel(private val repository: Repository) : ViewModel() {
                 )
             }
 
+            val sessionDates = sessions.map { it.date }.toSet()
+            val streakResult = com.example.edutrack.util.StreakCalculator.calculateStreak(sessionDates, today)
+
             StatsUiState(
                 hasStats = true,
                 thisWeekTotalHours = thisWeekTotalHours,
                 lastWeekTotalHours = lastWeekTotalHours,
                 comparisonHoursText = comparisonText,
-                subjectHours = subjectHoursList
+                subjectHours = subjectHoursList,
+                currentStreak = streakResult.currentStreak,
+                bestStreak = streakResult.bestStreak
             )
         }
     }.stateIn(
