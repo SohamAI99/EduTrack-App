@@ -4,12 +4,11 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -19,8 +18,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.edutrack.model.ThemeMode
 import com.example.edutrack.navigation.Screen
 import com.example.edutrack.ui.components.AppBottomBar
+import com.example.edutrack.ui.components.AppearanceBottomSheet
 import com.example.edutrack.ui.components.MascotMood
 import com.example.edutrack.ui.screens.AddSessionScreen
 import com.example.edutrack.ui.screens.HistoryScreen
@@ -36,6 +37,7 @@ import com.example.edutrack.ui.viewmodel.SessionDetailViewModel
 import com.example.edutrack.ui.viewmodel.SessionViewModel
 import com.example.edutrack.ui.viewmodel.StatsViewModel
 import com.example.edutrack.ui.viewmodel.SubjectViewModel
+import com.example.edutrack.ui.viewmodel.ThemeViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,7 +45,17 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         val appContainer = (application as EduTrackApplication).container
         setContent {
-            EduTrackTheme {
+            val themeViewModel: ThemeViewModel = viewModel(factory = ThemeViewModel.provideFactory())
+            val themeMode by themeViewModel.themeMode.collectAsState()
+            var showAppearanceSheet by remember { mutableStateOf(false) }
+
+            val darkTheme = when (themeMode) {
+                ThemeMode.LIGHT -> false
+                ThemeMode.DARK -> true
+                ThemeMode.SYSTEM -> isSystemInDarkTheme()
+            }
+
+            EduTrackTheme(darkTheme = darkTheme) {
                 val navController = rememberNavController()
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentRoute = navBackStackEntry?.destination?.route
@@ -101,6 +113,9 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onSessionClick = { sessionId ->
                                     navController.navigate(Screen.SessionDetail.createRoute(sessionId))
+                                },
+                                onOpenAppearanceSheet = {
+                                    showAppearanceSheet = true
                                 }
                             )
                         }
@@ -207,6 +222,16 @@ class MainActivity : ComponentActivity() {
                                 uiState = statsUiState
                             )
                         }
+                    }
+
+                    if (showAppearanceSheet) {
+                        AppearanceBottomSheet(
+                            selectedThemeMode = themeMode,
+                            onThemeModeSelected = themeViewModel::setThemeMode,
+                            onDismissRequest = {
+                                showAppearanceSheet = false
+                            }
+                        )
                     }
                 }
             }

@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -37,6 +39,7 @@ fun HomeScreen(
     uiState: HomeUiState,
     onNavigateToSubjects: () -> Unit = {},
     onSessionClick: (Long) -> Unit = {},
+    onOpenAppearanceSheet: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Scaffold(
@@ -49,6 +52,15 @@ fun HomeScreen(
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.onBackground
                     )
+                },
+                actions = {
+                    IconButton(onClick = onOpenAppearanceSheet) {
+                        Icon(
+                            imageVector = Icons.Default.DarkMode,
+                            contentDescription = "Appearance",
+                            tint = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
             )
