@@ -45,7 +45,9 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         val appContainer = (application as EduTrackApplication).container
         setContent {
-            val themeViewModel: ThemeViewModel = viewModel(factory = ThemeViewModel.provideFactory())
+            val themeViewModel: ThemeViewModel = viewModel(
+                factory = ThemeViewModel.provideFactory(appContainer.userPreferencesRepository)
+            )
             val themeMode by themeViewModel.themeMode.collectAsState()
             var showAppearanceSheet by remember { mutableStateOf(false) }
 

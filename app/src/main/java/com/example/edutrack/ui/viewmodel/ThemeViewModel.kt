@@ -2,25 +2,35 @@ package com.example.edutrack.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
+import com.example.edutrack.data.repository.UserPreferencesRepository
 import com.example.edutrack.model.ThemeMode
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
-class ThemeViewModel : ViewModel() {
-    private val _themeMode = MutableStateFlow(ThemeMode.SYSTEM)
-    val themeMode: StateFlow<ThemeMode> = _themeMode.asStateFlow()
+class ThemeViewModel(private val userPreferencesRepository: UserPreferencesRepository) : ViewModel() {
+
+    val themeMode: StateFlow<ThemeMode> = userPreferencesRepository.themeMode
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = ThemeMode.SYSTEM
+        )
 
     fun setThemeMode(mode: ThemeMode) {
-        _themeMode.value = mode
+        viewModelScope.launch {
+            userPreferencesRepository.setThemeMode(mode)
+        }
     }
 
     companion object {
-        fun provideFactory(): ViewModelProvider.Factory =
+        fun provideFactory(userPreferencesRepository: UserPreferencesRepository): ViewModelProvider.Factory =
             object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                    return ThemeViewModel() as T
+                    return ThemeViewModel(userPreferencesRepository) as T
                 }
             }
     }
