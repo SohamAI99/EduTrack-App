@@ -1,6 +1,6 @@
 # EduTrack: Study Progress Tracker
 
-EduTrack is an Android application designed for students to set study goals, track study sessions, and visualize study progress. Built for IBM4203 coursework.
+EduTrack is an Android application designed for students to set study goals, track study sessions, and visualize study progress. Built for IBM4203 coursework (v1.0 Feature Freeze).
 
 ## Tech Stack & Architecture
 - **Language**: Kotlin
