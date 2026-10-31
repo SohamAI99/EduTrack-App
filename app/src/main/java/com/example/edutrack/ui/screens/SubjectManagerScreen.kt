@@ -228,17 +228,6 @@ fun SubjectForm(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                 }
-                Surface(
-                    shape = MaterialTheme.shapes.small,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
-                ) {
-                    Text(
-                        text = "CONFIGURATOR",
-                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 12.sp),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                    )
-                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))

@@ -26,7 +26,6 @@ import com.example.edutrack.ui.components.MascotMood
 import com.example.edutrack.ui.screens.AddSessionScreen
 import com.example.edutrack.ui.screens.HistoryScreen
 import com.example.edutrack.ui.screens.HomeScreen
-import com.example.edutrack.ui.screens.PlaceholderScreen
 import com.example.edutrack.ui.screens.SessionDetailScreen
 import com.example.edutrack.ui.screens.StatsScreen
 import com.example.edutrack.ui.screens.SubjectManagerScreen
