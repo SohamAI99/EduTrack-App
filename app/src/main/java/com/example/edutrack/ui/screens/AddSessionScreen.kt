@@ -21,6 +21,8 @@ import androidx.core.graphics.toColorInt
 import com.example.edutrack.data.local.Subject
 import com.example.edutrack.ui.components.AppButton
 import com.example.edutrack.ui.components.AppCard
+import com.example.edutrack.ui.components.EmptyState
+import com.example.edutrack.ui.components.MascotMood
 import com.example.edutrack.ui.theme.EduTrackTheme
 import com.example.edutrack.ui.viewmodel.SessionFormState
 import kotlinx.coroutines.launch
@@ -91,41 +93,29 @@ fun AddSessionScreen(
                     .padding(16.dp),
                 contentAlignment = Alignment.Center
             ) {
-                AppCard(
-                    modifier = Modifier.fillMaxWidth()
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    Column(
+                    EmptyState(
+                        mood = MascotMood.HAPPY,
+                        title = "Add a subject first",
+                        message = "You need to add at least one subject before logging a study session."
+                    )
+                    AppButton(
+                        text = "Go to Subjects",
+                        onClick = onNavigateToSubjects,
+                        isAccent = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedButton(
+                        onClick = onBackClick,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                            .height(50.dp),
+                        shape = MaterialTheme.shapes.extraLarge
                     ) {
-                        Text(
-                            text = "Add a subject first",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = "You need to add at least one subject before logging a study session.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        AppButton(
-                            text = "Go to Subjects",
-                            onClick = onNavigateToSubjects,
-                            isAccent = true,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        OutlinedButton(
-                            onClick = onBackClick,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(50.dp),
-                            shape = MaterialTheme.shapes.extraLarge
-                        ) {
-                            Text("Cancel", style = MaterialTheme.typography.labelLarge)
-                        }
+                        Text("Cancel", style = MaterialTheme.typography.labelLarge)
                     }
                 }
             }
