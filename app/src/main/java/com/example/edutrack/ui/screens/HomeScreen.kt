@@ -1,13 +1,16 @@
 package com.example.edutrack.ui.screens
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -15,14 +18,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.toColorInt
+import com.example.edutrack.R
 import com.example.edutrack.ui.components.AppButton
 import com.example.edutrack.ui.components.AppCard
 import com.example.edutrack.ui.components.EmptyState
@@ -37,13 +43,17 @@ import com.example.edutrack.ui.viewmodel.formatDurationCompact
 @Composable
 fun HomeScreen(
     uiState: HomeUiState,
+    userName: String = "",
     onNavigateToSubjects: () -> Unit = {},
     onSessionClick: (Long) -> Unit = {},
     onOpenAppearanceSheet: () -> Unit = {},
+    onOpenEditNameDialog: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    val initial = userName.trim().firstOrNull()?.uppercaseChar()?.toString() ?: "U"
+
     Scaffold(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize().statusBarsPadding(),
         topBar = {
             TopAppBar(
                 title = {
@@ -59,6 +69,21 @@ fun HomeScreen(
                             imageVector = Icons.Default.DarkMode,
                             contentDescription = "Appearance",
                             tint = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+                    Box(
+                        modifier = Modifier
+                            .padding(end = 12.dp)
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primary)
+                            .clickable { onOpenEditNameDialog() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = initial,
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.onPrimary
                         )
                     }
                 },
@@ -101,71 +126,152 @@ fun HomeScreen(
                 verticalArrangement = Arrangement.spacedBy(20.dp),
                 contentPadding = PaddingValues(bottom = 24.dp)
             ) {
-                // Greeting Header
+                // Greeting Header & Streak Pill
                 item {
-                    Column {
-                        Text(
-                            text = "Hey there",
-                            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "Ready to level up tonight?",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Hey, ${userName.ifBlank { "there" }}",
+                                style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Ready to level up tonight?",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+
+                        // Streak Pill
+                        Surface(
+                            shape = MaterialTheme.shapes.extraLarge,
+                            color = MaterialTheme.colorScheme.surfaceVariant,
+                            border = androidx.compose.foundation.BorderStroke(
+                                1.dp,
+                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
+                            )
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.LocalFireDepartment,
+                                    contentDescription = "Streak",
+                                    tint = MaterialTheme.colorScheme.secondary,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Text(
+                                    text = if (uiState.currentStreak > 0) "${uiState.currentStreak} day streak" else "Start a streak",
+                                    style = MaterialTheme.typography.labelMedium.copy(
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold
+                                    ),
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
                     }
                 }
 
-                // Summary Card with Today's Total and Weekly Goal Ring
+                // Gradient Summary Card
                 item {
+                    val gradientBrush = Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xFF6C5CE7),
+                            Color(0xFF5341DB)
+                        )
+                    )
+
+                    val summaryDrawable = when (uiState.summaryMascotMood) {
+                        MascotMood.CELEBRATE -> R.drawable.mascot_celebrate
+                        MascotMood.STUDY -> R.drawable.mascot_study
+                        else -> R.drawable.mascot_sleepy
+                    }
+
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = MaterialTheme.shapes.large,
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.primary
-                        )
+                        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
                     ) {
-                        Row(
+                        Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(20.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                                .background(gradientBrush)
+                                .padding(20.dp)
                         ) {
-                            Column {
-                                Surface(
-                                    shape = MaterialTheme.shapes.small,
-                                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f)
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(16.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Text(
-                                        text = "TODAY",
-                                        style = MaterialTheme.typography.labelSmall.copy(
-                                            fontSize = 12.sp,
-                                            fontWeight = FontWeight.Bold
-                                        ),
-                                        color = MaterialTheme.colorScheme.onPrimary,
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                    Column {
+                                        Surface(
+                                            shape = MaterialTheme.shapes.small,
+                                            color = Color.White.copy(alpha = 0.2f)
+                                        ) {
+                                            Text(
+                                                text = "TODAY",
+                                                style = MaterialTheme.typography.labelSmall.copy(
+                                                    fontSize = 12.sp,
+                                                    fontWeight = FontWeight.Bold
+                                                ),
+                                                color = Color.White,
+                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                            )
+                                        }
+
+                                        Spacer(modifier = Modifier.height(12.dp))
+
+                                        Text(
+                                            text = formatDurationCompact(uiState.todayTotalMinutes),
+                                            style = MaterialTheme.typography.headlineLarge.copy(
+                                                fontSize = 38.sp,
+                                                fontWeight = FontWeight.Bold
+                                            ),
+                                            color = Color.White
+                                        )
+                                    }
+
+                                    WeeklyGoalRing(
+                                        weeklyTotalMinutes = uiState.weeklyTotalMinutes,
+                                        weeklyGoalMinutes = uiState.weeklyGoalMinutes
                                     )
                                 }
 
-                                Spacer(modifier = Modifier.height(12.dp))
+                                HorizontalDivider(color = Color.White.copy(alpha = 0.2f))
 
-                                Text(
-                                    text = formatDurationCompact(uiState.todayTotalMinutes),
-                                    style = MaterialTheme.typography.headlineLarge.copy(
-                                        fontSize = 38.sp,
-                                        fontWeight = FontWeight.Bold
-                                    ),
-                                    color = MaterialTheme.colorScheme.onPrimary
-                                )
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = uiState.targetTonightText,
+                                        style = MaterialTheme.typography.labelMedium.copy(
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Medium
+                                        ),
+                                        color = Color.White.copy(alpha = 0.9f)
+                                    )
+
+                                    Image(
+                                        painter = painterResource(id = summaryDrawable),
+                                        contentDescription = "Mascot",
+                                        modifier = Modifier.size(32.dp)
+                                    )
+                                }
                             }
-
-                            WeeklyGoalRing(
-                                weeklyTotalMinutes = uiState.weeklyTotalMinutes,
-                                weeklyGoalMinutes = uiState.weeklyGoalMinutes
-                            )
                         }
                     }
                 }
@@ -248,7 +354,7 @@ fun WeeklyGoalRing(
         0f
     }
 
-    val trackColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f)
+    val trackColor = Color.White.copy(alpha = 0.2f)
     val progressColor = MaterialTheme.colorScheme.secondary
 
     Box(
@@ -289,12 +395,12 @@ fun WeeklyGoalRing(
             Text(
                 text = "$percentageInt%",
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.onPrimary
+                color = Color.White
             )
             Text(
                 text = "GOAL",
                 style = MaterialTheme.typography.labelSmall.copy(fontSize = 12.sp),
-                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
+                color = Color.White.copy(alpha = 0.8f)
             )
         }
     }
@@ -455,8 +561,10 @@ fun HomeScreenLightPreview() {
                 hasSubjects = true,
                 todayTotalMinutes = 105,
                 weeklyTotalMinutes = 300,
-                weeklyGoalMinutes = 600
-            )
+                weeklyGoalMinutes = 600,
+                currentStreak = 5
+            ),
+            userName = "Soham"
         )
     }
 }
@@ -470,8 +578,10 @@ fun HomeScreenDarkPreview() {
                 hasSubjects = true,
                 todayTotalMinutes = 105,
                 weeklyTotalMinutes = 300,
-                weeklyGoalMinutes = 600
-            )
+                weeklyGoalMinutes = 600,
+                currentStreak = 5
+            ),
+            userName = "Soham"
         )
     }
 }

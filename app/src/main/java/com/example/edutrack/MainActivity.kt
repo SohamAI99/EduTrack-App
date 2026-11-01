@@ -22,6 +22,8 @@ import com.example.edutrack.model.ThemeMode
 import com.example.edutrack.navigation.Screen
 import com.example.edutrack.ui.components.AppBottomBar
 import com.example.edutrack.ui.components.AppearanceBottomSheet
+import com.example.edutrack.ui.components.EditNameDialog
+import com.example.edutrack.ui.components.GoalReachedDialog
 import com.example.edutrack.ui.components.MascotMood
 import com.example.edutrack.ui.screens.AddSessionScreen
 import com.example.edutrack.ui.screens.HistoryScreen
@@ -29,6 +31,7 @@ import com.example.edutrack.ui.screens.HomeScreen
 import com.example.edutrack.ui.screens.SessionDetailScreen
 import com.example.edutrack.ui.screens.StatsScreen
 import com.example.edutrack.ui.screens.SubjectManagerScreen
+import com.example.edutrack.ui.screens.WelcomeScreen
 import com.example.edutrack.ui.theme.EduTrackTheme
 import com.example.edutrack.ui.viewmodel.HistoryViewModel
 import com.example.edutrack.ui.viewmodel.HomeViewModel
@@ -48,7 +51,11 @@ class MainActivity : ComponentActivity() {
                 factory = ThemeViewModel.provideFactory(appContainer.userPreferencesRepository)
             )
             val themeMode by themeViewModel.themeMode.collectAsState()
+            val userName by themeViewModel.userName.collectAsState()
+
             var showAppearanceSheet by remember { mutableStateOf(false) }
+            var showEditNameDialog by remember { mutableStateOf(false) }
+            var celebratedSubjectName by remember { mutableStateOf<String?>(null) }
 
             val darkTheme = when (themeMode) {
                 ThemeMode.LIGHT -> false
@@ -57,69 +64,78 @@ class MainActivity : ComponentActivity() {
             }
 
             EduTrackTheme(darkTheme = darkTheme) {
-                val navController = rememberNavController()
-                val navBackStackEntry by navController.currentBackStackEntryAsState()
-                val currentRoute = navBackStackEntry?.destination?.route
+                if (userName.isBlank()) {
+                    WelcomeScreen(
+                        onSaveName = themeViewModel::setUserName
+                    )
+                } else {
+                    val navController = rememberNavController()
+                    val navBackStackEntry by navController.currentBackStackEntryAsState()
+                    val currentRoute = navBackStackEntry?.destination?.route
 
-                val subjectViewModel: SubjectViewModel = viewModel(
-                    factory = SubjectViewModel.provideFactory(appContainer.repository)
-                )
-                val sessionViewModel: SessionViewModel = viewModel(
-                    factory = SessionViewModel.provideFactory(appContainer.repository)
-                )
-                val historyViewModel: HistoryViewModel = viewModel(
-                    factory = HistoryViewModel.provideFactory(appContainer.repository)
-                )
-                val homeViewModel: HomeViewModel = viewModel(
-                    factory = HomeViewModel.provideFactory(appContainer.repository)
-                )
-                val statsViewModel: StatsViewModel = viewModel(
-                    factory = StatsViewModel.provideFactory(appContainer.repository)
-                )
+                    val subjectViewModel: SubjectViewModel = viewModel(
+                        factory = SubjectViewModel.provideFactory(appContainer.repository)
+                    )
+                    val sessionViewModel: SessionViewModel = viewModel(
+                        factory = SessionViewModel.provideFactory(appContainer.repository)
+                    )
+                    val historyViewModel: HistoryViewModel = viewModel(
+                        factory = HistoryViewModel.provideFactory(appContainer.repository)
+                    )
+                    val homeViewModel: HomeViewModel = viewModel(
+                        factory = HomeViewModel.provideFactory(appContainer.repository)
+                    )
+                    val statsViewModel: StatsViewModel = viewModel(
+                        factory = StatsViewModel.provideFactory(appContainer.repository)
+                    )
 
-                val subjects by subjectViewModel.subjects.collectAsState()
-                val formState by subjectViewModel.formState.collectAsState()
-                val sessionFormState by sessionViewModel.formState.collectAsState()
-                val historyUiState by historyViewModel.uiState.collectAsState()
-                val homeUiState by homeViewModel.uiState.collectAsState()
-                val statsUiState by statsViewModel.uiState.collectAsState()
+                    val subjects by subjectViewModel.subjects.collectAsState()
+                    val formState by subjectViewModel.formState.collectAsState()
+                    val sessionFormState by sessionViewModel.formState.collectAsState()
+                    val historyUiState by historyViewModel.uiState.collectAsState()
+                    val homeUiState by homeViewModel.uiState.collectAsState()
+                    val statsUiState by statsViewModel.uiState.collectAsState()
 
-                Scaffold(
-                    modifier = Modifier.fillMaxSize(),
-                    bottomBar = {
-                        AppBottomBar(
-                            currentRoute = currentRoute,
-                            onNavigateToRoute = { route ->
-                                navController.navigate(route) {
-                                    popUpTo(navController.graph.findStartDestination().id) {
-                                        saveState = true
+                    Scaffold(
+                        modifier = Modifier.fillMaxSize(),
+                        bottomBar = {
+                            AppBottomBar(
+                                currentRoute = currentRoute,
+                                onNavigateToRoute = { route ->
+                                    navController.navigate(route) {
+                                        popUpTo(navController.graph.findStartDestination().id) {
+                                            saveState = true
+                                        }
+                                        launchSingleTop = true
+                                        restoreState = true
                                     }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            }
-                        )
-                    }
-                ) { innerPadding ->
-                    NavHost(
-                        navController = navController,
-                        startDestination = Screen.Home.route,
-                        modifier = Modifier.padding(innerPadding)
-                    ) {
-                        composable(Screen.Home.route) {
-                            HomeScreen(
-                                uiState = homeUiState,
-                                onNavigateToSubjects = {
-                                    navController.navigate(Screen.Subjects.route)
-                                },
-                                onSessionClick = { sessionId ->
-                                    navController.navigate(Screen.SessionDetail.createRoute(sessionId))
-                                },
-                                onOpenAppearanceSheet = {
-                                    showAppearanceSheet = true
                                 }
                             )
                         }
+                    ) { innerPadding ->
+                        NavHost(
+                            navController = navController,
+                            startDestination = Screen.Home.route,
+                            modifier = Modifier.padding(innerPadding)
+                        ) {
+                            composable(Screen.Home.route) {
+                                HomeScreen(
+                                    uiState = homeUiState,
+                                    userName = userName,
+                                    onNavigateToSubjects = {
+                                        navController.navigate(Screen.Subjects.route)
+                                    },
+                                    onSessionClick = { sessionId ->
+                                        navController.navigate(Screen.SessionDetail.createRoute(sessionId))
+                                    },
+                                    onOpenAppearanceSheet = {
+                                        showAppearanceSheet = true
+                                    },
+                                    onOpenEditNameDialog = {
+                                        showEditNameDialog = true
+                                    }
+                                )
+                            }
                         composable(Screen.History.route) {
                             HistoryScreen(
                                 sessions = historyUiState.filteredSessions,
@@ -182,8 +198,11 @@ class MainActivity : ComponentActivity() {
                                     navController.popBackStack()
                                 },
                                 onSaveSession = { onSuccess ->
-                                    sessionViewModel.saveSession {
+                                    sessionViewModel.saveSession { isGoalReached, subjectName ->
                                         onSuccess()
+                                        if (isGoalReached) {
+                                            celebratedSubjectName = subjectName
+                                        }
                                         if (sessionId != -1L) {
                                             navController.popBackStack()
                                         }
@@ -234,8 +253,28 @@ class MainActivity : ComponentActivity() {
                             }
                         )
                     }
+
+                    if (showEditNameDialog) {
+                        EditNameDialog(
+                            currentName = userName,
+                            onSaveName = themeViewModel::setUserName,
+                            onDismissRequest = {
+                                showEditNameDialog = false
+                            }
+                        )
+                    }
+
+                    celebratedSubjectName?.let { subjectName ->
+                        GoalReachedDialog(
+                            subjectName = subjectName,
+                            onDismissRequest = {
+                                celebratedSubjectName = null
+                            }
+                        )
+                    }
                 }
             }
         }
     }
+}
 }

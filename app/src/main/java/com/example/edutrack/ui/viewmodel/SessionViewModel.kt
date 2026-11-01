@@ -106,7 +106,7 @@ class SessionViewModel(private val repository: Repository) : ViewModel() {
         return isValid
     }
 
-    fun saveSession(onSuccess: () -> Unit) {
+    fun saveSession(onSuccessResult: (isGoalReached: Boolean, subjectName: String) -> Unit) {
         if (!validateForm()) return
 
         val current = _formState.value
@@ -123,13 +123,27 @@ class SessionViewModel(private val repository: Repository) : ViewModel() {
         )
 
         viewModelScope.launch {
+            val allSessions = repository.getAllSessions().firstOrNull() ?: emptyList()
+            val today = LocalDate.now()
+            val monday = today.minusDays((today.dayOfWeek.value - 1).toLong())
+            val sunday = monday.plusDays(6)
+
+            val previousWeekMinutes = allSessions
+                .filter { it.subjectId == subject.id && it.date >= monday && it.date <= sunday && it.id != session.id }
+                .sumOf { it.durationMinutes }
+
+            val goalMinutes = subject.weeklyGoalHours * 60
+            val isGoalReached = goalMinutes > 0 &&
+                    previousWeekMinutes < goalMinutes &&
+                    (previousWeekMinutes + durationMinutes) >= goalMinutes
+
             if (current.editingSessionId == null) {
                 repository.insertSession(session)
             } else {
                 repository.updateSession(session)
             }
             resetForm(defaultSubject = subject)
-            onSuccess()
+            onSuccessResult(isGoalReached, subject.name)
         }
     }
 

@@ -1,6 +1,8 @@
 package com.example.edutrack.ui.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -18,12 +20,12 @@ fun AppButton(
     enabled: Boolean = true
 ) {
     val backgroundColor = if (isAccent) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary
-    val contentColor = if (isAccent) Color.Black else MaterialTheme.colorScheme.onPrimary
+    val contentColor = if (isAccent) MaterialTheme.colorScheme.onSecondary else MaterialTheme.colorScheme.onPrimary
     Button(
         onClick = onClick,
         modifier = modifier.height(50.dp),
         enabled = enabled,
-        shape = MaterialTheme.shapes.extraLarge, // pill shape
+        shape = MaterialTheme.shapes.extraLarge,
         colors = ButtonDefaults.buttonColors(
             containerColor = backgroundColor,
             contentColor = contentColor,
@@ -44,19 +46,28 @@ fun AppCard(
     onClick: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
+    val cardShape = RoundedCornerShape(20.dp)
+    val cardBorder = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
+    val cardColors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    val cardElevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+
     if (onClick != null) {
         Card(
             onClick = onClick,
             modifier = modifier,
-            shape = MaterialTheme.shapes.medium,
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            shape = cardShape,
+            border = cardBorder,
+            colors = cardColors,
+            elevation = cardElevation,
             content = content
         )
     } else {
         Card(
             modifier = modifier,
-            shape = MaterialTheme.shapes.medium,
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            shape = cardShape,
+            border = cardBorder,
+            colors = cardColors,
+            elevation = cardElevation,
             content = content
         )
     }
@@ -94,7 +105,7 @@ fun AppCardLightPreview() {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(text = "Card Title", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurface)
                 Spacer(modifier = Modifier.height(4.dp))
-                Text(text = "This is a reusable AppCard with 16dp rounded corners.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(text = "This is a reusable AppCard with 20dp rounded corners.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }
@@ -108,7 +119,7 @@ fun AppCardDarkPreview() {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(text = "Card Title", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurface)
                 Spacer(modifier = Modifier.height(4.dp))
-                Text(text = "This is a reusable AppCard with 16dp rounded corners.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(text = "This is a reusable AppCard with 20dp rounded corners.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }

@@ -19,9 +19,22 @@ class ThemeViewModel(private val userPreferencesRepository: UserPreferencesRepos
             initialValue = ThemeMode.SYSTEM
         )
 
+    val userName: StateFlow<String> = userPreferencesRepository.userName
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = ""
+        )
+
     fun setThemeMode(mode: ThemeMode) {
         viewModelScope.launch {
             userPreferencesRepository.setThemeMode(mode)
+        }
+    }
+
+    fun setUserName(name: String) {
+        viewModelScope.launch {
+            userPreferencesRepository.setUserName(name)
         }
     }
 

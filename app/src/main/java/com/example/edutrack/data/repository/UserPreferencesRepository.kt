@@ -16,6 +16,7 @@ class UserPreferencesRepository(private val context: Context) {
 
     private object PreferencesKeys {
         val THEME_MODE = stringPreferencesKey("theme_mode")
+        val USER_NAME = stringPreferencesKey("user_name")
     }
 
     val themeMode: Flow<ThemeMode> = context.dataStore.data.map { preferences ->
@@ -30,6 +31,16 @@ class UserPreferencesRepository(private val context: Context) {
     suspend fun setThemeMode(themeMode: ThemeMode) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.THEME_MODE] = themeMode.name
+        }
+    }
+
+    val userName: Flow<String> = context.dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.USER_NAME] ?: ""
+    }
+
+    suspend fun setUserName(name: String) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.USER_NAME] = name.trim()
         }
     }
 }

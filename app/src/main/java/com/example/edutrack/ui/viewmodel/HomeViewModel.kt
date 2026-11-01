@@ -5,6 +5,8 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.edutrack.data.local.Subject
 import com.example.edutrack.data.repository.Repository
+import com.example.edutrack.ui.components.MascotMood
+import com.example.edutrack.util.StreakCalculator
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -27,6 +29,9 @@ data class HomeUiState(
     val todayTotalMinutes: Int = 0,
     val weeklyTotalMinutes: Int = 0,
     val weeklyGoalMinutes: Int = 0,
+    val currentStreak: Int = 0,
+    val targetTonightText: String = "Goal reached",
+    val summaryMascotMood: MascotMood = MascotMood.SLEEPY,
     val subjects: List<SubjectProgressUiModel> = emptyList(),
     val recentSessions: List<SessionItemUiModel> = emptyList()
 )
@@ -50,6 +55,30 @@ class HomeViewModel(private val repository: Repository) : ViewModel() {
 
         val totalWeeklyGoalHours = subjects.sumOf { it.weeklyGoalHours }
         val weeklyGoalMinutes = totalWeeklyGoalHours * 60
+
+        // Streak calculation
+        val sessionDates = sessions.map { it.date }.toSet()
+        val streakResult = StreakCalculator.calculateStreak(sessionDates, today)
+
+        // Target tonight calculation
+        val daysLeftInWeek = (7 - today.dayOfWeek.value + 1)
+        val remainingMinsThisWeek = (weeklyGoalMinutes - weeklyTotalMinutes).coerceAtLeast(0)
+        val targetMinsPerDay = if (daysLeftInWeek > 0 && remainingMinsThisWeek > 0) (remainingMinsThisWeek / daysLeftInWeek) else 0
+
+        val targetText = if (weeklyGoalMinutes > 0 && weeklyTotalMinutes >= weeklyGoalMinutes) {
+            "Goal reached"
+        } else if (targetMinsPerDay > 0) {
+            "Target: ${formatDurationCompact(targetMinsPerDay)} tonight"
+        } else {
+            "Goal reached"
+        }
+
+        // Summary mascot mood
+        val mascotMood = when {
+            weeklyGoalMinutes > 0 && weeklyTotalMinutes >= weeklyGoalMinutes -> MascotMood.CELEBRATE
+            todayTotalMinutes > 0 -> MascotMood.STUDY
+            else -> MascotMood.SLEEPY
+        }
 
         val subjectMap = subjects.associateBy { it.id }
         val subjectSessionsMap = thisWeekSessions.groupBy { it.subjectId }
@@ -89,6 +118,9 @@ class HomeViewModel(private val repository: Repository) : ViewModel() {
             todayTotalMinutes = todayTotalMinutes,
             weeklyTotalMinutes = weeklyTotalMinutes,
             weeklyGoalMinutes = weeklyGoalMinutes,
+            currentStreak = streakResult.currentStreak,
+            targetTonightText = targetText,
+            summaryMascotMood = mascotMood,
             subjects = subjectProgressList,
             recentSessions = recentSessionsList
         )
