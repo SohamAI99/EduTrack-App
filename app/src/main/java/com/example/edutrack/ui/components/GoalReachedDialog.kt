@@ -35,7 +35,8 @@ fun GoalReachedDialog(
                 Image(
                     painter = painterResource(id = R.drawable.mascot_celebrate),
                     contentDescription = "Celebration Mascot",
-                    modifier = Modifier.size(100.dp)
+                    contentScale = androidx.compose.ui.layout.ContentScale.Fit,
+                    modifier = Modifier.size(140.dp)
                 )
 
                 Text(

@@ -268,7 +268,8 @@ fun HomeScreen(
                                     Image(
                                         painter = painterResource(id = summaryDrawable),
                                         contentDescription = "Mascot",
-                                        modifier = Modifier.size(32.dp)
+                                        contentScale = androidx.compose.ui.layout.ContentScale.Fit,
+                                        modifier = Modifier.size(72.dp)
                                     )
                                 }
                             }

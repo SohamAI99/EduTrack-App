@@ -63,9 +63,8 @@ fun WelcomeScreen(
                 Image(
                     painter = painterResource(id = R.drawable.mascot_happy),
                     contentDescription = "EduTrack Mascot",
-                    modifier = Modifier
-                        .size(120.dp)
-                        .padding(8.dp)
+                    contentScale = androidx.compose.ui.layout.ContentScale.Fit,
+                    modifier = Modifier.size(160.dp)
                 )
 
                 Text(

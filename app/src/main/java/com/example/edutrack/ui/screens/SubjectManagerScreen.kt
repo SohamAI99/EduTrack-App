@@ -246,7 +246,8 @@ fun WeeklyCommitmentCard(
                 Image(
                     painter = painterResource(id = R.drawable.mascot_study),
                     contentDescription = "Mascot Study",
-                    modifier = Modifier.size(40.dp)
+                    contentScale = androidx.compose.ui.layout.ContentScale.Fit,
+                    modifier = Modifier.size(64.dp)
                 )
                 Column {
                     Text(

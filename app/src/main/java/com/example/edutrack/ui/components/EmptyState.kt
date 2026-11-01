@@ -6,6 +6,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -32,7 +33,8 @@ fun EmptyState(
         Image(
             painter = painterResource(id = mood.drawableRes),
             contentDescription = title,
-            modifier = Modifier.size(120.dp)
+            contentScale = ContentScale.Fit,
+            modifier = Modifier.size(160.dp)
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
