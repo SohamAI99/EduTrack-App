@@ -36,7 +36,7 @@ fun StatsScreen(
     modifier: Modifier = Modifier
 ) {
     Scaffold(
-        modifier = modifier.fillMaxSize().statusBarsPadding(),
+        modifier = modifier.fillMaxSize(),
         topBar = {
             TopAppBar(
                 title = {

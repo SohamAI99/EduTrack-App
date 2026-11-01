@@ -60,7 +60,7 @@ fun AddSessionScreen(
     }
 
     Scaffold(
-        modifier = modifier.fillMaxSize().statusBarsPadding(),
+        modifier = modifier.fillMaxSize(),
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             TopAppBar(

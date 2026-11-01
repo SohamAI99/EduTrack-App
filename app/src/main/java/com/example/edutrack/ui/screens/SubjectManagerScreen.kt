@@ -67,9 +67,7 @@ fun SubjectManagerScreen(
     val totalCommitmentHours = subjects.sumOf { it.weeklyGoalHours }
 
     Scaffold(
-        modifier = modifier
-            .fillMaxSize()
-            .statusBarsPadding(),
+        modifier = modifier.fillMaxSize(),
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             TopAppBar(

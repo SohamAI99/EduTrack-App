@@ -55,7 +55,7 @@ fun HistoryScreen(
     }
 
     Scaffold(
-        modifier = modifier.fillMaxSize().statusBarsPadding(),
+        modifier = modifier.fillMaxSize(),
         topBar = {
             TopAppBar(
                 title = {

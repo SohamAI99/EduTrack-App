@@ -53,7 +53,7 @@ fun HomeScreen(
     val initial = userName.trim().firstOrNull()?.uppercaseChar()?.toString() ?: "U"
 
     Scaffold(
-        modifier = modifier.fillMaxSize().statusBarsPadding(),
+        modifier = modifier.fillMaxSize(),
         topBar = {
             TopAppBar(
                 title = {
