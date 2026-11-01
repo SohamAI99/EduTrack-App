@@ -17,6 +17,7 @@ class UserPreferencesRepository(private val context: Context) {
     private object PreferencesKeys {
         val THEME_MODE = stringPreferencesKey("theme_mode")
         val USER_NAME = stringPreferencesKey("user_name")
+        val AVATAR_PATH = stringPreferencesKey("avatar_path")
     }
 
     val themeMode: Flow<ThemeMode> = context.dataStore.data.map { preferences ->
@@ -41,6 +42,16 @@ class UserPreferencesRepository(private val context: Context) {
     suspend fun setUserName(name: String) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.USER_NAME] = name.trim()
+        }
+    }
+
+    val avatarPath: Flow<String> = context.dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.AVATAR_PATH] ?: ""
+    }
+
+    suspend fun setAvatarPath(path: String) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.AVATAR_PATH] = path.trim()
         }
     }
 }
