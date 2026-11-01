@@ -9,8 +9,11 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
@@ -23,9 +26,10 @@ import com.example.edutrack.model.ThemeMode
 import com.example.edutrack.navigation.Screen
 import com.example.edutrack.ui.components.AppBottomBar
 import com.example.edutrack.ui.components.AppearanceBottomSheet
-import com.example.edutrack.ui.components.EditNameDialog
 import com.example.edutrack.ui.components.GoalReachedDialog
 import com.example.edutrack.ui.components.MascotMood
+import com.example.edutrack.ui.components.ProfileBottomSheet
+import kotlinx.coroutines.launch
 import com.example.edutrack.ui.screens.AddSessionScreen
 import com.example.edutrack.ui.screens.HistoryScreen
 import com.example.edutrack.ui.screens.HomeScreen
@@ -48,14 +52,19 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         val appContainer = (application as EduTrackApplication).container
         setContent {
+            val context = LocalContext.current
+            val scope = rememberCoroutineScope()
+            val snackbarHostState = remember { SnackbarHostState() }
+
             val themeViewModel: ThemeViewModel = viewModel(
                 factory = ThemeViewModel.provideFactory(appContainer.userPreferencesRepository)
             )
             val themeMode by themeViewModel.themeMode.collectAsState()
             val userName by themeViewModel.userName.collectAsState()
+            val avatarPath by themeViewModel.avatarPath.collectAsState()
 
             var showAppearanceSheet by remember { mutableStateOf(false) }
-            var showEditNameDialog by remember { mutableStateOf(false) }
+            var showProfileSheet by remember { mutableStateOf(false) }
             var celebratedSubjectName by remember { mutableStateOf<String?>(null) }
 
             val darkTheme = when (themeMode) {
@@ -100,6 +109,7 @@ class MainActivity : ComponentActivity() {
                     Scaffold(
                         modifier = Modifier.fillMaxSize(),
                         contentWindowInsets = WindowInsets(0, 0, 0, 0),
+                        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
                         bottomBar = {
                             AppBottomBar(
                                 currentRoute = currentRoute,
@@ -124,6 +134,7 @@ class MainActivity : ComponentActivity() {
                                 HomeScreen(
                                     uiState = homeUiState,
                                     userName = userName,
+                                    avatarPath = avatarPath,
                                     onNavigateToSubjects = {
                                         navController.navigate(Screen.Subjects.route)
                                     },
@@ -133,8 +144,8 @@ class MainActivity : ComponentActivity() {
                                     onOpenAppearanceSheet = {
                                         showAppearanceSheet = true
                                     },
-                                    onOpenEditNameDialog = {
-                                        showEditNameDialog = true
+                                    onOpenProfileSheet = {
+                                        showProfileSheet = true
                                     }
                                 )
                             }
@@ -256,12 +267,30 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
-                    if (showEditNameDialog) {
-                        EditNameDialog(
+                    if (showProfileSheet) {
+                        ProfileBottomSheet(
                             currentName = userName,
-                            onSaveName = themeViewModel::setUserName,
+                            avatarPath = avatarPath,
+                            onSaveName = { newName ->
+                                themeViewModel.setUserName(newName)
+                                scope.launch {
+                                    snackbarHostState.showSnackbar("Profile updated")
+                                }
+                            },
+                            onSaveAvatarPath = { newPath ->
+                                themeViewModel.setAvatarPath(newPath)
+                                scope.launch {
+                                    snackbarHostState.showSnackbar("Profile updated")
+                                }
+                            },
+                            onRemovePhoto = {
+                                themeViewModel.removeAvatarPhoto(context)
+                                scope.launch {
+                                    snackbarHostState.showSnackbar("Profile updated")
+                                }
+                            },
                             onDismissRequest = {
-                                showEditNameDialog = false
+                                showProfileSheet = false
                             }
                         )
                     }

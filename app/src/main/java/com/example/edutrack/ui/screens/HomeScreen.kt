@@ -33,6 +33,7 @@ import com.example.edutrack.ui.components.AppButton
 import com.example.edutrack.ui.components.AppCard
 import com.example.edutrack.ui.components.EmptyState
 import com.example.edutrack.ui.components.MascotMood
+import com.example.edutrack.ui.components.UserAvatar
 import com.example.edutrack.ui.theme.EduTrackTheme
 import com.example.edutrack.ui.viewmodel.HomeUiState
 import com.example.edutrack.ui.viewmodel.SessionItemUiModel
@@ -44,14 +45,13 @@ import com.example.edutrack.ui.viewmodel.formatDurationCompact
 fun HomeScreen(
     uiState: HomeUiState,
     userName: String = "",
+    avatarPath: String = "",
     onNavigateToSubjects: () -> Unit = {},
     onSessionClick: (Long) -> Unit = {},
     onOpenAppearanceSheet: () -> Unit = {},
-    onOpenEditNameDialog: () -> Unit = {},
+    onOpenProfileSheet: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    val initial = userName.trim().firstOrNull()?.uppercaseChar()?.toString() ?: "U"
-
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
@@ -71,21 +71,14 @@ fun HomeScreen(
                             tint = MaterialTheme.colorScheme.onBackground
                         )
                     }
-                    Box(
+                    UserAvatar(
+                        userName = userName,
+                        avatarPath = avatarPath,
                         modifier = Modifier
                             .padding(end = 12.dp)
                             .size(36.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primary)
-                            .clickable { onOpenEditNameDialog() },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = initial,
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                            color = MaterialTheme.colorScheme.onPrimary
-                        )
-                    }
+                            .clickable { onOpenProfileSheet() }
+                    )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
             )
