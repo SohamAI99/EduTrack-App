@@ -1,5 +1,6 @@
 package com.example.edutrack.ui.viewmodel
 
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -7,13 +8,17 @@ import com.example.edutrack.data.local.Subject
 import com.example.edutrack.data.repository.Repository
 import com.example.edutrack.ui.components.MascotMood
 import com.example.edutrack.util.StreakCalculator
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import java.time.LocalDate
 import java.util.Locale
 
+@Immutable
 data class SubjectProgressUiModel(
     val subject: Subject,
     val spentMinutesThisWeek: Int,
@@ -24,6 +29,7 @@ data class SubjectProgressUiModel(
     val remainingText: String
 )
 
+@Immutable
 data class HomeUiState(
     val hasSubjects: Boolean = false,
     val todayTotalMinutes: Int = 0,
@@ -56,11 +62,9 @@ class HomeViewModel(private val repository: Repository) : ViewModel() {
         val totalWeeklyGoalHours = subjects.sumOf { it.weeklyGoalHours }
         val weeklyGoalMinutes = totalWeeklyGoalHours * 60
 
-        // Streak calculation
         val sessionDates = sessions.map { it.date }.toSet()
         val streakResult = StreakCalculator.calculateStreak(sessionDates, today)
 
-        // Target tonight calculation
         val daysLeftInWeek = (7 - today.dayOfWeek.value + 1)
         val remainingMinsThisWeek = (weeklyGoalMinutes - weeklyTotalMinutes).coerceAtLeast(0)
         val targetMinsPerDay = if (daysLeftInWeek > 0 && remainingMinsThisWeek > 0) (remainingMinsThisWeek / daysLeftInWeek) else 0
@@ -73,7 +77,6 @@ class HomeViewModel(private val repository: Repository) : ViewModel() {
             "Goal reached"
         }
 
-        // Summary mascot mood
         val mascotMood = when {
             weeklyGoalMinutes > 0 && weeklyTotalMinutes >= weeklyGoalMinutes -> MascotMood.CELEBRATE
             todayTotalMinutes > 0 -> MascotMood.STUDY
@@ -124,11 +127,14 @@ class HomeViewModel(private val repository: Repository) : ViewModel() {
             subjects = subjectProgressList,
             recentSessions = recentSessionsList
         )
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = HomeUiState()
-    )
+    }
+        .flowOn(Dispatchers.Default)
+        .distinctUntilChanged()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = HomeUiState()
+        )
 
     companion object {
         fun provideFactory(repository: Repository): ViewModelProvider.Factory =

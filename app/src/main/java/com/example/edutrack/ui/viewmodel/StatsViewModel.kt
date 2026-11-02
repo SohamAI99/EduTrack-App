@@ -1,24 +1,30 @@
 package com.example.edutrack.ui.viewmodel
 
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.edutrack.data.local.Subject
 import com.example.edutrack.data.repository.Repository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.util.Locale
 
+@Immutable
 data class SubjectHoursUiModel(
     val subject: Subject,
     val thisWeekHours: Double,
     val lastWeekHours: Double
 )
 
+@Immutable
 data class RhythmDayUiModel(
     val dayOfWeek: DayOfWeek,
     val dayLabel: String,
@@ -28,6 +34,7 @@ data class RhythmDayUiModel(
     val isFuture: Boolean
 )
 
+@Immutable
 data class StatsUiState(
     val hasStats: Boolean = false,
     val thisWeekTotalHours: Double = 0.0,
@@ -55,7 +62,6 @@ class StatsViewModel(private val repository: Repository) : ViewModel() {
             val lastWeekMonday = monday.minusDays(7)
             val lastWeekSunday = monday.minusDays(1)
 
-            // Weekly totals matching History Flow data
             val thisWeekSessions = sessions.filter { it.date >= monday && it.date <= sunday }
             val lastWeekSessions = sessions.filter { it.date >= lastWeekMonday && it.date <= lastWeekSunday }
 
@@ -117,11 +123,14 @@ class StatsViewModel(private val repository: Repository) : ViewModel() {
                 rhythmDays = rhythmDaysList
             )
         }
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = StatsUiState()
-    )
+    }
+        .flowOn(Dispatchers.Default)
+        .distinctUntilChanged()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = StatsUiState()
+        )
 
     companion object {
         fun provideFactory(repository: Repository): ViewModelProvider.Factory =

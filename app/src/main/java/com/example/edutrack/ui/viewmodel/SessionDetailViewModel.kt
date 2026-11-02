@@ -1,17 +1,23 @@
 package com.example.edutrack.ui.viewmodel
 
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.edutrack.data.local.StudySession
 import com.example.edutrack.data.repository.Repository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
+@Immutable
 data class SessionDetailUiModel(
     val id: Long,
     val subjectId: Long,
@@ -31,8 +37,9 @@ class SessionDetailViewModel(
         repository.getSessionById(sessionId),
         repository.getAllSubjects()
     ) { session, subjects ->
-        if (session == null) null
-        else {
+        if (session == null) {
+            null
+        } else {
             val subject = subjects.find { it.id == session.subjectId }
             SessionDetailUiModel(
                 id = session.id,
@@ -44,25 +51,20 @@ class SessionDetailViewModel(
                 notes = session.notes
             )
         }
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = null
-    )
+    }
+        .flowOn(Dispatchers.Default)
+        .distinctUntilChanged()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = null
+        )
 
     fun deleteSession(onSuccess: () -> Unit) {
         viewModelScope.launch {
-            uiState.value?.let { sessionUi ->
-                repository.deleteSession(
-                    StudySession(
-                        id = sessionUi.id,
-                        subjectId = sessionUi.subjectId,
-                        durationMinutes = sessionUi.durationMinutes,
-                        date = sessionUi.date,
-                        notes = sessionUi.notes,
-                        createdAt = LocalDate.now()
-                    )
-                )
+            val session = repository.getSessionById(sessionId).firstOrNull()
+            if (session != null) {
+                repository.deleteSession(session)
             }
             onSuccess()
         }

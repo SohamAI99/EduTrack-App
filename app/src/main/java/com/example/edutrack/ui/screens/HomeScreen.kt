@@ -351,14 +351,17 @@ fun WeeklyGoalRing(
     val trackColor = Color.White.copy(alpha = 0.2f)
     val progressColor = MaterialTheme.colorScheme.secondary
 
+    val strokeWidthDp = 8.dp
+
     Box(
         modifier = modifier.size(80.dp),
         contentAlignment = Alignment.Center
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
-            val strokeWidth = 8.dp.toPx()
-            val diameter = size.minDimension - strokeWidth
-            val topLeft = Offset(strokeWidth / 2, strokeWidth / 2)
+            val strokeWidthPx = strokeWidthDp.toPx()
+            val stroke = Stroke(width = strokeWidthPx, cap = StrokeCap.Round)
+            val diameter = size.minDimension - strokeWidthPx
+            val topLeft = Offset(strokeWidthPx / 2, strokeWidthPx / 2)
             val arcSize = Size(diameter, diameter)
 
             drawArc(
@@ -368,7 +371,7 @@ fun WeeklyGoalRing(
                 useCenter = false,
                 topLeft = topLeft,
                 size = arcSize,
-                style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+                style = stroke
             )
 
             drawArc(
@@ -378,7 +381,7 @@ fun WeeklyGoalRing(
                 useCenter = false,
                 topLeft = topLeft,
                 size = arcSize,
-                style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+                style = stroke
             )
         }
 

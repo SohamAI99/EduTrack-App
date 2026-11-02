@@ -1,17 +1,22 @@
 package com.example.edutrack.ui.viewmodel
 
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.edutrack.data.local.Subject
 import com.example.edutrack.data.repository.Repository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import java.time.LocalDate
 
+@Immutable
 data class SessionItemUiModel(
     val id: Long,
     val subjectId: Long,
@@ -22,11 +27,13 @@ data class SessionItemUiModel(
     val notes: String
 )
 
+@Immutable
 data class DateRange(
     val startDate: LocalDate,
     val endDate: LocalDate
 )
 
+@Immutable
 data class HistoryUiState(
     val hasAnySessions: Boolean = false,
     val filteredSessions: List<SessionItemUiModel> = emptyList(),
@@ -81,11 +88,14 @@ class HistoryViewModel(private val repository: Repository) : ViewModel() {
             selectedSubjectId = validSubjectId,
             dateRange = dateRange
         )
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = HistoryUiState()
-    )
+    }
+        .flowOn(Dispatchers.Default)
+        .distinctUntilChanged()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = HistoryUiState()
+        )
 
     fun selectSubjectFilter(subjectId: Long?) {
         _selectedSubjectId.value = subjectId
