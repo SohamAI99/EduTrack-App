@@ -41,6 +41,12 @@ fun AppearanceBottomSheet(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                val chipColors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = MaterialTheme.colorScheme.primary,
+                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                    selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimary
+                )
+
                 FilterChip(
                     selected = selectedThemeMode == ThemeMode.LIGHT,
                     onClick = { onThemeModeSelected(ThemeMode.LIGHT) },
@@ -48,10 +54,7 @@ fun AppearanceBottomSheet(
                     leadingIcon = { Icon(imageVector = Icons.Default.LightMode, contentDescription = null, modifier = Modifier.size(16.dp)) },
                     modifier = Modifier.weight(1f),
                     shape = MaterialTheme.shapes.extraLarge,
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = MaterialTheme.colorScheme.primary,
-                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary
-                    )
+                    colors = chipColors
                 )
 
                 FilterChip(
@@ -61,10 +64,7 @@ fun AppearanceBottomSheet(
                     leadingIcon = { Icon(imageVector = Icons.Default.DarkMode, contentDescription = null, modifier = Modifier.size(16.dp)) },
                     modifier = Modifier.weight(1f),
                     shape = MaterialTheme.shapes.extraLarge,
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = MaterialTheme.colorScheme.primary,
-                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary
-                    )
+                    colors = chipColors
                 )
 
                 FilterChip(
@@ -74,10 +74,7 @@ fun AppearanceBottomSheet(
                     leadingIcon = { Icon(imageVector = Icons.Default.Settings, contentDescription = null, modifier = Modifier.size(16.dp)) },
                     modifier = Modifier.weight(1f),
                     shape = MaterialTheme.shapes.extraLarge,
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = MaterialTheme.colorScheme.primary,
-                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary
-                    )
+                    colors = chipColors
                 )
             }
 
