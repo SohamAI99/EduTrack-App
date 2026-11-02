@@ -172,7 +172,11 @@ fun HistoryScreen(
                             )
                         }
 
-                        items(daySessions, key = { it.id }) { session ->
+                        items(
+                            items = daySessions,
+                            key = { it.id },
+                            contentType = { "session_card" }
+                        ) { session ->
                             SessionCard(
                                 session = session,
                                 onClick = { onSessionClick(session.id) }
@@ -320,7 +324,11 @@ fun SubjectFilterRow(
             )
         }
 
-        items(subjects, key = { it.id }) { subject ->
+        items(
+            items = subjects,
+            key = { it.id },
+            contentType = { "subject_filter_chip" }
+        ) { subject ->
             val color = try {
                 Color(subject.colorHex.toColorInt())
             } catch (_: Exception) {

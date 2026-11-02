@@ -151,7 +151,11 @@ fun SubjectManagerScreen(
                     }
                 }
 
-                items(subjects, key = { it.id }) { subject ->
+                items(
+                    items = subjects,
+                    key = { it.id },
+                    contentType = { "subject_card" }
+                ) { subject ->
                     SubjectCard(
                         subject = subject,
                         onEditClick = { onEditSubject(subject) },

@@ -183,7 +183,11 @@ fun StatsScreen(
 
                     val maxHours = uiState.subjectHours.flatMap { listOf(it.thisWeekHours, it.lastWeekHours) }.maxOrNull() ?: 1.0
 
-                    items(uiState.subjectHours, key = { it.subject.id }) { item ->
+                    items(
+                        items = uiState.subjectHours,
+                        key = { it.subject.id },
+                        contentType = { "subject_bar_row" }
+                    ) { item ->
                         SubjectBarRow(
                             item = item,
                             maxHours = maxHours

@@ -293,7 +293,11 @@ fun HomeScreen(
                 }
 
                 // Subject Progress Cards
-                items(uiState.subjects, key = { it.subject.id }) { subjectProgress ->
+                items(
+                    items = uiState.subjects,
+                    key = { it.subject.id },
+                    contentType = { "subject_progress_card" }
+                ) { subjectProgress ->
                     SubjectProgressCard(progress = subjectProgress)
                 }
 
@@ -319,7 +323,11 @@ fun HomeScreen(
                         }
                     }
                 } else {
-                    items(uiState.recentSessions, key = { "recent_${it.id}" }) { session ->
+                    items(
+                        items = uiState.recentSessions,
+                        key = { "recent_${it.id}" },
+                        contentType = { "recent_activity_card" }
+                    ) { session ->
                         RecentActivityCard(
                             session = session,
                             onClick = { onSessionClick(session.id) }

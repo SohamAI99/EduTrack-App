@@ -54,8 +54,8 @@ fun AddSessionScreen(
     val quickChips = listOf(15, 30, 45, 60)
 
     LaunchedEffect(subjects) {
-        if (formState.selectedSubject == null && subjects.isNotEmpty()) {
-            onSubjectChange(subjects.first())
+        if (formState.selectedSubject == null) {
+            subjects.firstOrNull()?.let { onSubjectChange(it) }
         }
     }
 
