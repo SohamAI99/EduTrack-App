@@ -23,6 +23,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.edutrack.util.AvatarHelper
+import com.example.edutrack.util.NameValidator
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -56,12 +57,11 @@ fun ProfileBottomSheet(
     }
 
     fun submitSave() {
-        val trimmed = nameText.trim()
-        if (trimmed.isEmpty() || trimmed.length > 20) {
+        if (!NameValidator.isValid(nameText)) {
             showError = true
         } else {
             showError = false
-            onSaveName(trimmed)
+            onSaveName(nameText.trim())
             onDismissRequest()
         }
     }

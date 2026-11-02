@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.sp
 import com.example.edutrack.R
 import com.example.edutrack.ui.components.AppButton
 import com.example.edutrack.ui.theme.EduTrackTheme
+import com.example.edutrack.util.NameValidator
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,12 +33,11 @@ fun WelcomeScreen(
     var showError by remember { mutableStateOf(false) }
 
     fun submitName() {
-        val trimmed = nameText.trim()
-        if (trimmed.isEmpty()) {
+        if (!NameValidator.isValid(nameText)) {
             showError = true
         } else {
             showError = false
-            onSaveName(trimmed)
+            onSaveName(nameText.trim())
         }
     }
 
