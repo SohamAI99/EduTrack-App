@@ -50,7 +50,6 @@ import com.example.edutrack.ui.viewmodel.ThemeViewModel
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         val appContainer = (application as EduTrackApplication).container
         setContent {
             val context = LocalContext.current
@@ -68,24 +67,18 @@ class MainActivity : ComponentActivity() {
             var showProfileSheet by remember { mutableStateOf(false) }
             var celebratedSubjectName by remember { mutableStateOf<String?>(null) }
 
-            val darkTheme = when (themeMode) {
-                ThemeMode.LIGHT -> false
-                ThemeMode.DARK -> true
-                ThemeMode.SYSTEM -> isSystemInDarkTheme()
-            }
+            val darkTheme = com.example.edutrack.util.resolveDarkTheme(themeMode, isSystemInDarkTheme())
 
-            DisposableEffect(darkTheme) {
-                (context as? ComponentActivity)?.enableEdgeToEdge(
-                    statusBarStyle = SystemBarStyle.auto(
-                        android.graphics.Color.TRANSPARENT,
-                        android.graphics.Color.TRANSPARENT
-                    ) { darkTheme },
-                    navigationBarStyle = SystemBarStyle.auto(
-                        android.graphics.Color.TRANSPARENT,
-                        android.graphics.Color.TRANSPARENT
-                    ) { darkTheme }
-                )
-                onDispose {}
+            val view = androidx.compose.ui.platform.LocalView.current
+            if (!view.isInEditMode) {
+                SideEffect {
+                    val window = (context as? android.app.Activity)?.window
+                    if (window != null) {
+                        val insetsController = androidx.core.view.WindowCompat.getInsetsController(window, view)
+                        insetsController.isAppearanceLightStatusBars = !darkTheme
+                        insetsController.isAppearanceLightNavigationBars = !darkTheme
+                    }
+                }
             }
 
             EduTrackTheme(darkTheme = darkTheme) {
@@ -123,7 +116,6 @@ class MainActivity : ComponentActivity() {
 
                     Scaffold(
                         modifier = Modifier.fillMaxSize(),
-                        contentWindowInsets = WindowInsets(0, 0, 0, 0),
                         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
                         bottomBar = {
                             AppBottomBar(
@@ -157,9 +149,11 @@ class MainActivity : ComponentActivity() {
                                         navController.navigate(Screen.SessionDetail.createRoute(sessionId))
                                     },
                                     onOpenAppearanceSheet = {
+                                        android.util.Log.d("EduDebug", "MainActivity: setting showAppearanceSheet = true")
                                         showAppearanceSheet = true
                                     },
                                     onOpenProfileSheet = {
+                                        android.util.Log.d("EduDebug", "MainActivity: setting showProfileSheet = true")
                                         showProfileSheet = true
                                     }
                                 )
