@@ -2,11 +2,8 @@ package com.example.edutrack
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
@@ -15,6 +12,8 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
@@ -28,9 +27,7 @@ import com.example.edutrack.navigation.Screen
 import com.example.edutrack.ui.components.AppBottomBar
 import com.example.edutrack.ui.components.AppearanceBottomSheet
 import com.example.edutrack.ui.components.GoalReachedDialog
-import com.example.edutrack.ui.components.MascotMood
 import com.example.edutrack.ui.components.ProfileBottomSheet
-import kotlinx.coroutines.launch
 import com.example.edutrack.ui.screens.AddSessionScreen
 import com.example.edutrack.ui.screens.HistoryScreen
 import com.example.edutrack.ui.screens.HomeScreen
@@ -46,6 +43,8 @@ import com.example.edutrack.ui.viewmodel.SessionViewModel
 import com.example.edutrack.ui.viewmodel.StatsViewModel
 import com.example.edutrack.ui.viewmodel.SubjectViewModel
 import com.example.edutrack.ui.viewmodel.ThemeViewModel
+import com.example.edutrack.util.resolveDarkTheme
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -67,14 +66,14 @@ class MainActivity : ComponentActivity() {
             var showProfileSheet by remember { mutableStateOf(false) }
             var celebratedSubjectName by remember { mutableStateOf<String?>(null) }
 
-            val darkTheme = com.example.edutrack.util.resolveDarkTheme(themeMode, isSystemInDarkTheme())
+            val darkTheme = resolveDarkTheme(themeMode, isSystemInDarkTheme())
 
-            val view = androidx.compose.ui.platform.LocalView.current
+            val view = LocalView.current
             if (!view.isInEditMode) {
-                SideEffect {
+                LaunchedEffect(darkTheme) {
                     val window = (context as? android.app.Activity)?.window
                     if (window != null) {
-                        val insetsController = androidx.core.view.WindowCompat.getInsetsController(window, view)
+                        val insetsController = WindowCompat.getInsetsController(window, view)
                         insetsController.isAppearanceLightStatusBars = !darkTheme
                         insetsController.isAppearanceLightNavigationBars = !darkTheme
                     }
@@ -90,29 +89,6 @@ class MainActivity : ComponentActivity() {
                     val navController = rememberNavController()
                     val navBackStackEntry by navController.currentBackStackEntryAsState()
                     val currentRoute = navBackStackEntry?.destination?.route
-
-                    val subjectViewModel: SubjectViewModel = viewModel(
-                        factory = SubjectViewModel.provideFactory(appContainer.repository)
-                    )
-                    val sessionViewModel: SessionViewModel = viewModel(
-                        factory = SessionViewModel.provideFactory(appContainer.repository)
-                    )
-                    val historyViewModel: HistoryViewModel = viewModel(
-                        factory = HistoryViewModel.provideFactory(appContainer.repository)
-                    )
-                    val homeViewModel: HomeViewModel = viewModel(
-                        factory = HomeViewModel.provideFactory(appContainer.repository)
-                    )
-                    val statsViewModel: StatsViewModel = viewModel(
-                        factory = StatsViewModel.provideFactory(appContainer.repository)
-                    )
-
-                    val subjects by subjectViewModel.subjects.collectAsState()
-                    val formState by subjectViewModel.formState.collectAsState()
-                    val sessionFormState by sessionViewModel.formState.collectAsState()
-                    val historyUiState by historyViewModel.uiState.collectAsState()
-                    val homeUiState by homeViewModel.uiState.collectAsState()
-                    val statsUiState by statsViewModel.uiState.collectAsState()
 
                     Scaffold(
                         modifier = Modifier.fillMaxSize(),
@@ -138,6 +114,11 @@ class MainActivity : ComponentActivity() {
                             modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())
                         ) {
                             composable(Screen.Home.route) {
+                                val homeViewModel: HomeViewModel = viewModel(
+                                    factory = HomeViewModel.provideFactory(appContainer.repository)
+                                )
+                                val homeUiState by homeViewModel.uiState.collectAsState()
+
                                 HomeScreen(
                                     uiState = homeUiState,
                                     userName = userName,
@@ -149,172 +130,195 @@ class MainActivity : ComponentActivity() {
                                         navController.navigate(Screen.SessionDetail.createRoute(sessionId))
                                     },
                                     onOpenAppearanceSheet = {
-                                        android.util.Log.d("EduDebug", "MainActivity: setting showAppearanceSheet = true")
                                         showAppearanceSheet = true
                                     },
                                     onOpenProfileSheet = {
-                                        android.util.Log.d("EduDebug", "MainActivity: setting showProfileSheet = true")
                                         showProfileSheet = true
                                     }
                                 )
                             }
-                        composable(Screen.History.route) {
-                            HistoryScreen(
-                                sessions = historyUiState.filteredSessions,
-                                hasAnySessions = historyUiState.hasAnySessions,
-                                subjects = historyUiState.subjects,
-                                selectedSubjectId = historyUiState.selectedSubjectId,
-                                dateRange = historyUiState.dateRange,
-                                isFilterActive = historyUiState.isFilterActive,
-                                onSubjectSelect = historyViewModel::selectSubjectFilter,
-                                onDateRangeSelect = historyViewModel::setDateRangeFilter,
-                                onClearFilters = historyViewModel::clearFilters,
-                                onSessionClick = { sessionId ->
-                                    navController.navigate(Screen.SessionDetail.createRoute(sessionId))
-                                }
-                            )
-                        }
-                        composable(
-                            route = Screen.SessionDetail.route,
-                            arguments = listOf(navArgument("sessionId") { type = NavType.LongType })
-                        ) { backStackEntry ->
-                            val sessionId = backStackEntry.arguments?.getLong("sessionId") ?: 0L
-                            val detailViewModel: SessionDetailViewModel = viewModel(
-                                factory = SessionDetailViewModel.provideFactory(sessionId, appContainer.repository),
-                                key = "SessionDetail_$sessionId"
-                            )
-                            val sessionDetail by detailViewModel.uiState.collectAsState()
+                            composable(Screen.History.route) {
+                                val historyViewModel: HistoryViewModel = viewModel(
+                                    factory = HistoryViewModel.provideFactory(appContainer.repository)
+                                )
+                                val historyUiState by historyViewModel.uiState.collectAsState()
 
-                            SessionDetailScreen(
-                                session = sessionDetail,
-                                onBackClick = {
-                                    navController.popBackStack()
-                                },
-                                onEditClick = {
-                                    navController.navigate(Screen.AddSession.createRoute(sessionId))
-                                },
-                                onDeleteClick = {
-                                    detailViewModel.deleteSession {
-                                        navController.popBackStack()
+                                HistoryScreen(
+                                    sessions = historyUiState.filteredSessions,
+                                    hasAnySessions = historyUiState.hasAnySessions,
+                                    subjects = historyUiState.subjects,
+                                    selectedSubjectId = historyUiState.selectedSubjectId,
+                                    dateRange = historyUiState.dateRange,
+                                    isFilterActive = historyUiState.isFilterActive,
+                                    onSubjectSelect = historyViewModel::selectSubjectFilter,
+                                    onDateRangeSelect = historyViewModel::setDateRangeFilter,
+                                    onClearFilters = historyViewModel::clearFilters,
+                                    onSessionClick = { sessionId ->
+                                        navController.navigate(Screen.SessionDetail.createRoute(sessionId))
                                     }
-                                }
-                            )
-                        }
-                        composable(
-                            route = Screen.AddSession.route,
-                            arguments = listOf(navArgument("sessionId") { type = NavType.LongType; defaultValue = -1L })
-                        ) { backStackEntry ->
-                            val sessionId = backStackEntry.arguments?.getLong("sessionId") ?: -1L
-                            LaunchedEffect(sessionId) {
-                                sessionViewModel.loadSessionForEditing(sessionId)
+                                )
                             }
+                            composable(
+                                route = Screen.SessionDetail.route,
+                                arguments = listOf(navArgument("sessionId") { type = NavType.LongType })
+                            ) { backStackEntry ->
+                                val sessionId = backStackEntry.arguments?.getLong("sessionId") ?: 0L
+                                val detailViewModel: SessionDetailViewModel = viewModel(
+                                    factory = SessionDetailViewModel.provideFactory(sessionId, appContainer.repository),
+                                    key = "SessionDetail_$sessionId"
+                                )
+                                val sessionDetail by detailViewModel.uiState.collectAsState()
 
-                            AddSessionScreen(
-                                subjects = subjects,
-                                formState = sessionFormState,
-                                onSubjectChange = sessionViewModel::updateSelectedSubject,
-                                onDurationChange = sessionViewModel::updateDurationText,
-                                onDateChange = sessionViewModel::updateDate,
-                                onNotesChange = sessionViewModel::updateNotesText,
-                                onBackClick = {
-                                    navController.popBackStack()
-                                },
-                                onSaveSession = { onSuccess ->
-                                    sessionViewModel.saveSession { isGoalReached, subjectName ->
-                                        onSuccess()
-                                        if (isGoalReached) {
-                                            celebratedSubjectName = subjectName
-                                        }
-                                        if (sessionId != -1L) {
+                                SessionDetailScreen(
+                                    session = sessionDetail,
+                                    onBackClick = {
+                                        navController.popBackStack()
+                                    },
+                                    onEditClick = {
+                                        navController.navigate(Screen.AddSession.createRoute(sessionId))
+                                    },
+                                    onDeleteClick = {
+                                        detailViewModel.deleteSession {
                                             navController.popBackStack()
                                         }
                                     }
-                                },
-                                onNavigateToSubjects = {
-                                    navController.navigate(Screen.Subjects.route)
+                                )
+                            }
+                            composable(
+                                route = Screen.AddSession.route,
+                                arguments = listOf(navArgument("sessionId") { type = NavType.LongType; defaultValue = -1L })
+                            ) { backStackEntry ->
+                                val sessionId = backStackEntry.arguments?.getLong("sessionId") ?: -1L
+                                val sessionViewModel: SessionViewModel = viewModel(
+                                    factory = SessionViewModel.provideFactory(appContainer.repository)
+                                )
+                                val subjectViewModel: SubjectViewModel = viewModel(
+                                    factory = SubjectViewModel.provideFactory(appContainer.repository)
+                                )
+                                val subjects by subjectViewModel.subjects.collectAsState()
+                                val sessionFormState by sessionViewModel.formState.collectAsState()
+
+                                LaunchedEffect(sessionId) {
+                                    sessionViewModel.loadSessionForEditing(sessionId)
+                                }
+
+                                AddSessionScreen(
+                                    subjects = subjects,
+                                    formState = sessionFormState,
+                                    onSubjectChange = sessionViewModel::updateSelectedSubject,
+                                    onDurationChange = sessionViewModel::updateDurationText,
+                                    onDateChange = sessionViewModel::updateDate,
+                                    onNotesChange = sessionViewModel::updateNotesText,
+                                    onBackClick = {
+                                        navController.popBackStack()
+                                    },
+                                    onSaveSession = { onSuccess ->
+                                        sessionViewModel.saveSession { isGoalReached, subjectName ->
+                                            onSuccess()
+                                            if (isGoalReached) {
+                                                celebratedSubjectName = subjectName
+                                            }
+                                            if (sessionId != -1L) {
+                                                navController.popBackStack()
+                                            }
+                                        }
+                                    },
+                                    onNavigateToSubjects = {
+                                        navController.navigate(Screen.Subjects.route)
+                                    }
+                                )
+                            }
+                            composable(Screen.Subjects.route) {
+                                val subjectViewModel: SubjectViewModel = viewModel(
+                                    factory = SubjectViewModel.provideFactory(appContainer.repository)
+                                )
+                                val subjects by subjectViewModel.subjects.collectAsState()
+                                val formState by subjectViewModel.formState.collectAsState()
+
+                                SubjectManagerScreen(
+                                    subjects = subjects,
+                                    formState = formState,
+                                    onNameChange = subjectViewModel::updateName,
+                                    onColorSelect = subjectViewModel::updateColor,
+                                    onIncrementGoal = subjectViewModel::incrementGoalHours,
+                                    onDecrementGoal = subjectViewModel::decrementGoalHours,
+                                    onSubmitForm = { onSuccess ->
+                                        val isEdit = subjectViewModel.formState.value.editingSubjectId != null
+                                        subjectViewModel.saveSubject {
+                                            onSuccess(if (isEdit) "Subject updated" else "Subject saved")
+                                        }
+                                    },
+                                    onBackClick = {
+                                        navController.popBackStack()
+                                    },
+                                    onEditSubject = subjectViewModel::editSubject,
+                                    onDeleteSubject = { subject, onSuccess ->
+                                        subjectViewModel.deleteSubject(subject, onSuccess)
+                                    },
+                                    onCancelEdit = subjectViewModel::cancelEdit
+                                )
+                            }
+                            composable(Screen.Stats.route) {
+                                val statsViewModel: StatsViewModel = viewModel(
+                                    factory = StatsViewModel.provideFactory(appContainer.repository)
+                                )
+                                val statsUiState by statsViewModel.uiState.collectAsState()
+
+                                StatsScreen(
+                                    uiState = statsUiState
+                                )
+                            }
+                        }
+
+                        if (showAppearanceSheet) {
+                            AppearanceBottomSheet(
+                                selectedThemeMode = themeMode,
+                                onThemeModeSelected = themeViewModel::setThemeMode,
+                                onDismissRequest = {
+                                    showAppearanceSheet = false
                                 }
                             )
                         }
-                        composable(Screen.Subjects.route) {
-                            SubjectManagerScreen(
-                                subjects = subjects,
-                                formState = formState,
-                                onNameChange = subjectViewModel::updateName,
-                                onColorSelect = subjectViewModel::updateColor,
-                                onIncrementGoal = subjectViewModel::incrementGoalHours,
-                                onDecrementGoal = subjectViewModel::decrementGoalHours,
-                                onSubmitForm = { onSuccess ->
-                                    val isEdit = subjectViewModel.formState.value.editingSubjectId != null
-                                    subjectViewModel.saveSubject {
-                                        onSuccess(if (isEdit) "Subject updated" else "Subject saved")
+
+                        if (showProfileSheet) {
+                            ProfileBottomSheet(
+                                currentName = userName,
+                                avatarPath = avatarPath,
+                                onSaveName = { newName ->
+                                    themeViewModel.setUserName(newName)
+                                    scope.launch {
+                                        snackbarHostState.showSnackbar("Profile updated")
                                     }
                                 },
-                                onBackClick = {
-                                    navController.popBackStack()
+                                onSaveAvatarPath = { newPath ->
+                                    themeViewModel.setAvatarPath(newPath)
+                                    scope.launch {
+                                        snackbarHostState.showSnackbar("Profile updated")
+                                    }
                                 },
-                                onEditSubject = subjectViewModel::editSubject,
-                                onDeleteSubject = { subject, onSuccess ->
-                                    subjectViewModel.deleteSubject(subject, onSuccess)
+                                onRemovePhoto = {
+                                    themeViewModel.removeAvatarPhoto(context)
+                                    scope.launch {
+                                        snackbarHostState.showSnackbar("Profile updated")
+                                    }
                                 },
-                                onCancelEdit = subjectViewModel::cancelEdit
+                                onDismissRequest = {
+                                    showProfileSheet = false
+                                }
                             )
                         }
-                        composable(Screen.Stats.route) {
-                            StatsScreen(
-                                uiState = statsUiState
+
+                        celebratedSubjectName?.let { subjectName ->
+                            GoalReachedDialog(
+                                subjectName = subjectName,
+                                onDismissRequest = {
+                                    celebratedSubjectName = null
+                                }
                             )
                         }
-                    }
-
-                    if (showAppearanceSheet) {
-                        AppearanceBottomSheet(
-                            selectedThemeMode = themeMode,
-                            onThemeModeSelected = themeViewModel::setThemeMode,
-                            onDismissRequest = {
-                                showAppearanceSheet = false
-                            }
-                        )
-                    }
-
-                    if (showProfileSheet) {
-                        ProfileBottomSheet(
-                            currentName = userName,
-                            avatarPath = avatarPath,
-                            onSaveName = { newName ->
-                                themeViewModel.setUserName(newName)
-                                scope.launch {
-                                    snackbarHostState.showSnackbar("Profile updated")
-                                }
-                            },
-                            onSaveAvatarPath = { newPath ->
-                                themeViewModel.setAvatarPath(newPath)
-                                scope.launch {
-                                    snackbarHostState.showSnackbar("Profile updated")
-                                }
-                            },
-                            onRemovePhoto = {
-                                themeViewModel.removeAvatarPhoto(context)
-                                scope.launch {
-                                    snackbarHostState.showSnackbar("Profile updated")
-                                }
-                            },
-                            onDismissRequest = {
-                                showProfileSheet = false
-                            }
-                        )
-                    }
-
-                    celebratedSubjectName?.let { subjectName ->
-                        GoalReachedDialog(
-                            subjectName = subjectName,
-                            onDismissRequest = {
-                                celebratedSubjectName = null
-                            }
-                        )
                     }
                 }
             }
         }
     }
-}
 }

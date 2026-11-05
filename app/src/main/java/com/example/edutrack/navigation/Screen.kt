@@ -1,6 +1,7 @@
 package com.example.edutrack.navigation
 
 sealed class Screen(val route: String) {
+    object Welcome : Screen("welcome")
     object Home : Screen("home")
     object History : Screen("history")
     object AddSession : Screen("add_session?sessionId={sessionId}") {
