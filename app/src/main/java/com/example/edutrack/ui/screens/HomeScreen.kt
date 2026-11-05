@@ -56,6 +56,7 @@ fun HomeScreen(
         modifier = modifier.fillMaxSize(),
         topBar = {
             TopAppBar(
+                modifier = Modifier.statusBarsPadding(),
                 title = {
                     Text(
                         text = "Home",
@@ -64,23 +65,27 @@ fun HomeScreen(
                     )
                 },
                 actions = {
-                    IconButton(onClick = onOpenAppearanceSheet) {
+                    IconButton(
+                        onClick = onOpenAppearanceSheet
+                    ) {
                         Icon(
                             imageVector = Icons.Default.DarkMode,
                             contentDescription = "Appearance",
                             tint = MaterialTheme.colorScheme.onBackground
                         )
                     }
-                    UserAvatar(
-                        userName = userName,
-                        avatarPath = avatarPath,
-                        modifier = Modifier
-                            .padding(end = 12.dp)
-                            .size(36.dp)
-                            .clickable { onOpenProfileSheet() }
-                    )
+                    IconButton(
+                        onClick = onOpenProfileSheet
+                    ) {
+                        UserAvatar(
+                            userName = userName,
+                            avatarPath = avatarPath,
+                            modifier = Modifier.size(32.dp)
+                        )
+                    }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
+                windowInsets = TopAppBarDefaults.windowInsets
             )
         },
         containerColor = MaterialTheme.colorScheme.background

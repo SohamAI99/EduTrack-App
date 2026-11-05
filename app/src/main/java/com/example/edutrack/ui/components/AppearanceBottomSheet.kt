@@ -7,6 +7,7 @@ import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -41,41 +42,104 @@ fun AppearanceBottomSheet(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                val chipColors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = MaterialTheme.colorScheme.primary,
-                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
-                    selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimary
-                )
-
-                FilterChip(
-                    selected = selectedThemeMode == ThemeMode.LIGHT,
-                    onClick = { onThemeModeSelected(ThemeMode.LIGHT) },
-                    label = { Text("Light", style = MaterialTheme.typography.labelMedium.copy(fontSize = 12.sp)) },
-                    leadingIcon = { Icon(imageVector = Icons.Default.LightMode, contentDescription = null, modifier = Modifier.size(16.dp)) },
-                    modifier = Modifier.weight(1f),
+                Surface(
+                    onClick = {
+                        android.util.Log.d("EduDebug", "AppearanceBottomSheet: Light clicked")
+                        onThemeModeSelected(ThemeMode.LIGHT)
+                    },
                     shape = MaterialTheme.shapes.extraLarge,
-                    colors = chipColors
-                )
+                    color = if (selectedThemeMode == ThemeMode.LIGHT) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.LightMode,
+                            contentDescription = null,
+                            tint = if (selectedThemeMode == ThemeMode.LIGHT) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "Light",
+                            style = MaterialTheme.typography.labelMedium.copy(fontSize = 12.sp, fontWeight = FontWeight.Bold),
+                            color = if (selectedThemeMode == ThemeMode.LIGHT) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
 
-                FilterChip(
-                    selected = selectedThemeMode == ThemeMode.DARK,
-                    onClick = { onThemeModeSelected(ThemeMode.DARK) },
-                    label = { Text("Dark", style = MaterialTheme.typography.labelMedium.copy(fontSize = 12.sp)) },
-                    leadingIcon = { Icon(imageVector = Icons.Default.DarkMode, contentDescription = null, modifier = Modifier.size(16.dp)) },
-                    modifier = Modifier.weight(1f),
+                Surface(
+                    onClick = {
+                        android.util.Log.d("EduDebug", "AppearanceBottomSheet: Dark clicked")
+                        onThemeModeSelected(ThemeMode.DARK)
+                    },
                     shape = MaterialTheme.shapes.extraLarge,
-                    colors = chipColors
-                )
+                    color = if (selectedThemeMode == ThemeMode.DARK) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.DarkMode,
+                            contentDescription = null,
+                            tint = if (selectedThemeMode == ThemeMode.DARK) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "Dark",
+                            style = MaterialTheme.typography.labelMedium.copy(fontSize = 12.sp, fontWeight = FontWeight.Bold),
+                            color = if (selectedThemeMode == ThemeMode.DARK) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
 
-                FilterChip(
-                    selected = selectedThemeMode == ThemeMode.SYSTEM,
-                    onClick = { onThemeModeSelected(ThemeMode.SYSTEM) },
-                    label = { Text("System", style = MaterialTheme.typography.labelMedium.copy(fontSize = 12.sp)) },
-                    leadingIcon = { Icon(imageVector = Icons.Default.Settings, contentDescription = null, modifier = Modifier.size(16.dp)) },
-                    modifier = Modifier.weight(1f),
+                Surface(
+                    onClick = {
+                        android.util.Log.d("EduDebug", "AppearanceBottomSheet: System clicked")
+                        onThemeModeSelected(ThemeMode.SYSTEM)
+                    },
                     shape = MaterialTheme.shapes.extraLarge,
-                    colors = chipColors
-                )
+                    color = if (selectedThemeMode == ThemeMode.SYSTEM) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = null,
+                            tint = if (selectedThemeMode == ThemeMode.SYSTEM) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "System",
+                            style = MaterialTheme.typography.labelMedium.copy(fontSize = 12.sp, fontWeight = FontWeight.Bold),
+                            color = if (selectedThemeMode == ThemeMode.SYSTEM) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
             }
 
             Text(
